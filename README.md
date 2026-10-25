@@ -15,3 +15,9 @@ Bu proje, depo çalışanları ve yöneticilerin ürün/parça stoklarını merk
 - Entity Framework Core
 - PostgreSQL
 - Swagger
+## Kurulum - İlk Hafta
+Projeyi .NET 10 ve PostgreSQL ile geliştiriyoruz. Çalıştırmak için ikisinin de bilgisayarda kurulu olması gerekiyor.
+İlk olarak pgAdmin'de StokTakipDb adında bir veritabanı oluşturduk. Veritabanı şifremizin GitHub'a gitmemesi için bağlantı bilgisini appsettings.json'a yazmadık, user-secrets ile kendi bilgisayarımızda sakladık. Projeyi çalıştırmak isteyen biri proje klasöründe şu komutu kendi şifresiyle çalıştırmalı:
+    dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=StokTakipDb;Username=postgres;Password=sifreniz"
+Sonrasında dotnet run komutuyla proje çalışıyor.
+Şu an tablolarımızın sadece C# sınıflarını yazdık, veritabanında henüz oluşmadılar. Migration işlemlerini 2. haftada yapacağız.
