@@ -10,4 +10,5 @@ public class StokIstegi
     public DateTime TalepTarihi { get; set; } = DateTime.UtcNow;
     public string Durum { get; set; } = "Beklemede";
     public string? TalepSahibiId { get; set; }
+    public Kullanici? TalepSahibi {get; set;}
 }

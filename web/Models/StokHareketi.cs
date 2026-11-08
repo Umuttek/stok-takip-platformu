@@ -10,4 +10,5 @@ public class StokHareketi
     public int Miktar { get; set; }
     public DateTime Tarih { get; set; } = DateTime.UtcNow;
     public string? KullaniciId { get; set; }
+    public Kullanici? Kullanici{get;set;}
 }
