@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stok_takip/main.dart';
 void main() {
   testWidgets('Ana ekran açılıyor', (tester) async {
-    await tester.pumpWidget(const StokTakipApp());
+    await tester.pumpWidget(const StokTakipUyg());
     expect(find.text('Stok Takip Uygulaması'), findsOneWidget);
   });
 }

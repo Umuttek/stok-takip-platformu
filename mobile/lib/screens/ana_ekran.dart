@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
 class AnaEkran extends StatelessWidget {
   const AnaEkran({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

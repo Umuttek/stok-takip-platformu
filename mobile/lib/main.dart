@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'screens/ana_ekran.dart';
-
+import 'tema/uygulama_tema.dart';
 void main() {
-  runApp(const StokTakipApp());
+  runApp(const StokTakipUyg());
 }
-
-class StokTakipApp extends StatelessWidget {
-  const StokTakipApp({super.key});
-
+class StokTakipUyg extends StatelessWidget {
+  const StokTakipUyg({super.key});
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Stok Takip',
       debugShowCheckedModeBanner: false,
-      home: AnaEkran(),
+      theme: UygulamaTema.light,
+      home: const AnaEkran(),
     );
   }
 }
