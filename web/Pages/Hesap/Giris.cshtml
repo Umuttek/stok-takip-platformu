@@ -1,0 +1,32 @@
+@page
+@model StokTakip.Pages.Hesap.GirisModel
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <h2 class="mb-3">Giriş Yap</h2>
+        <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Girdi.Email" class="form-label"></label>
+                <input asp-for="Girdi.Email" class="form-control" />
+                <span asp-validation-for="Girdi.Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Girdi.Sifre" class="form-label"></label>
+                <input asp-for="Girdi.Sifre" class="form-control" />
+                <span asp-validation-for="Girdi.Sifre" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="Girdi.BeniHatirla" class="form-check-input" />
+                <label asp-for="Girdi.BeniHatirla" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
+        </form>
+        <p class="mt-3">Hesabın yok mu? <a asp-page="/Hesap/Kayit">Kayıt ol</a></p>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
