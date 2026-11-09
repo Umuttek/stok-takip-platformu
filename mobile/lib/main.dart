@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/giris_ekrani.dart';
+import 'screens/acilis_ekrani.dart';
 import 'tema/uygulama_tema.dart';
 void main() {
   runApp(const StokTakipUyg());
@@ -12,7 +12,7 @@ class StokTakipUyg extends StatelessWidget {
       title: 'Stok Takip',
       debugShowCheckedModeBanner: false,
       theme: UygulamaTema.light,
-      home: const GirisEkrani(),
+      home: const AcilisEkrani(),
     );
   }
 }
