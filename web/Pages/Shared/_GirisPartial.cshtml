@@ -1,11 +1,14 @@
 @using Microsoft.AspNetCore.Identity
 @using StokTakip.Models
 @inject SignInManager<Kullanici> SignInManager
+@inject UserManager<Kullanici> UserManager
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
+        var kullanici = await UserManager.GetUserAsync(User);
+        var gorunenAd = !string.IsNullOrWhiteSpace(kullanici?.AdSoyad) ? kullanici.AdSoyad : User.Identity?.Name;
         <li class="nav-item">
-            <span class="nav-link text-dark">Merhaba, @User.Identity?.Name</span>
+            <span class="nav-link text-dark">Merhaba, @gorunenAd</span>
         </li>
         <li class="nav-item">
             <form method="post" action="/Hesap/Cikis">

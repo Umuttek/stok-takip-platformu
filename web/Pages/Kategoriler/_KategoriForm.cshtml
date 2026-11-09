@@ -1,0 +1,12 @@
+@model StokTakip.Models.Kategori
+@* Sayfadan <partial name="_KategoriForm" for="Kategori" /> ile çağrılır; "Kategori." alan öneki korunur. *@
+<div class="mb-3">
+    <label asp-for="Ad" class="form-label"></label> <span class="text-danger">*</span>
+    <input asp-for="Ad" class="form-control" autofocus />
+    <span asp-validation-for="Ad" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Aciklama" class="form-label"></label>
+    <textarea asp-for="Aciklama" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Aciklama" class="text-danger small"></span>
+</div>

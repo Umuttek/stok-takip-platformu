@@ -1,0 +1,45 @@
+@page "{id:int}"
+@model StokTakip.Pages.Kategoriler.SilModel
+@{
+    ViewData["Title"] = "Kategori Sil";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="Index">Kategoriler</a></li>
+                <li class="breadcrumb-item active">Sil</li>
+            </ol>
+        </nav>
+        <div class="card shadow-sm border-danger-subtle">
+            <div class="card-body p-4">
+                <h3 class="card-title text-danger mb-3">Kategori Sil</h3>
+                <dl class="row mb-4">
+                    <dt class="col-sm-4">Kategori Adı</dt>
+                    <dd class="col-sm-8">@Model.Kategori.Ad</dd>
+                    <dt class="col-sm-4">Açıklama</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Kategori.Aciklama) ? "-" : Model.Kategori.Aciklama)</dd>
+                    <dt class="col-sm-4">Ürün Sayısı</dt>
+                    <dd class="col-sm-8">@Model.UrunSayisi</dd>
+                </dl>
+                @if (Model.UrunSayisi > 0)
+                {
+                    <div class="alert alert-warning">
+                        Bu kategoride <strong>@Model.UrunSayisi ürün</strong> bulunduğu için silinemez.
+                        Önce ürünleri başka bir kategoriye taşıyın veya silin.
+                    </div>
+                    <a asp-page="Index" class="btn btn-outline-secondary">Geri Dön</a>
+                }
+                else
+                {
+                    <p>Bu kategoriyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+                    <form method="post" class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                        <a asp-page="Index" class="btn btn-outline-secondary">İptal</a>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

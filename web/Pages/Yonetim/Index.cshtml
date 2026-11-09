@@ -3,5 +3,44 @@
 @{
     ViewData["Title"] = "Yönetim Paneli";
 }
-<h2>Yönetim Paneli</h2>
-<p>Bu sayfayı yalnızca Yöneticiler görebilir.</p>
+<h2 class="mb-1">Yönetim Paneli</h2>
+<p class="text-muted mb-4">Bu sayfayı yalnızca Yöneticiler görebilir. Kategori, ürün ve depo işlemlerini buradan yönetebilirsiniz.</p>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Ürün Yönetimi</h5>
+                <p class="card-text text-muted small">Yeni ürün ekleyin, mevcut ürünleri güncelleyin veya silin.</p>
+                <div class="d-flex gap-2">
+                    <a asp-page="/Urunler/Index" class="btn btn-sm btn-outline-primary">Listele</a>
+                    <a asp-page="/Urunler/Ekle" class="btn btn-sm btn-primary">+ Ürün Ekle</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Kategori Yönetimi</h5>
+                <p class="card-text text-muted small">Ürün kategorilerini oluşturun, düzenleyin veya silin.</p>
+                <div class="d-flex gap-2">
+                    <a asp-page="/Kategoriler/Index" class="btn btn-sm btn-outline-primary">Listele</a>
+                    <a asp-page="/Kategoriler/Ekle" class="btn btn-sm btn-primary">+ Kategori Ekle</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Depo Yönetimi</h5>
+                <p class="card-text text-muted small">Depo kayıtlarını ve konum bilgilerini yönetin.</p>
+                <div class="d-flex gap-2">
+                    <a asp-page="/Depolar/Index" class="btn btn-sm btn-outline-primary">Listele</a>
+                    <a asp-page="/Depolar/Ekle" class="btn btn-sm btn-primary">+ Depo Ekle</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

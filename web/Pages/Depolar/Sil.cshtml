@@ -1,0 +1,45 @@
+@page "{id:int}"
+@model StokTakip.Pages.Depolar.SilModel
+@{
+    ViewData["Title"] = "Depo Sil";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="Index">Depolar</a></li>
+                <li class="breadcrumb-item active">Sil</li>
+            </ol>
+        </nav>
+        <div class="card shadow-sm border-danger-subtle">
+            <div class="card-body p-4">
+                <h3 class="card-title text-danger mb-3">Depo Sil</h3>
+                <dl class="row mb-4">
+                    <dt class="col-sm-4">Depo Adı</dt>
+                    <dd class="col-sm-8">@Model.Depo.Ad</dd>
+                    <dt class="col-sm-4">Konum</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Depo.Konum) ? "-" : Model.Depo.Konum)</dd>
+                    <dt class="col-sm-4">Açıklama</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Depo.Aciklama) ? "-" : Model.Depo.Aciklama)</dd>
+                </dl>
+                @if (!Model.Silinebilir)
+                {
+                    <div class="alert alert-warning">
+                        Bu depoya ait <strong>@Model.HareketSayisi stok hareketi</strong> ve
+                        <strong>@Model.TalepSayisi talep</strong> kaydı bulunduğu için silinemez.
+                    </div>
+                    <a asp-page="Index" class="btn btn-outline-secondary">Geri Dön</a>
+                }
+                else
+                {
+                    <p>Bu depoyu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+                    <form method="post" class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                        <a asp-page="Index" class="btn btn-outline-secondary">İptal</a>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

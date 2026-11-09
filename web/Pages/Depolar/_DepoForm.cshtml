@@ -1,0 +1,18 @@
+@model StokTakip.Models.Depo
+@* Sayfadan <partial name="_DepoForm" for="Depo" /> ile çağrılır; "Depo." alan öneki korunur. *@
+<div class="mb-3">
+    <label asp-for="Ad" class="form-label"></label> <span class="text-danger">*</span>
+    <input asp-for="Ad" class="form-control" autofocus />
+    <span asp-validation-for="Ad" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Konum" class="form-label"></label>
+    <input asp-for="Konum" class="form-control" placeholder="ör. İstanbul / Tuzla, A Blok" />
+    <span asp-validation-for="Konum" class="text-danger small"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Aciklama" class="form-label"></label>
+    <textarea asp-for="Aciklama" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Aciklama" class="text-danger small"></span>
+</div>
+

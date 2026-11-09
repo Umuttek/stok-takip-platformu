@@ -1,0 +1,40 @@
+@page
+@model StokTakip.Pages.Urunler.EkleModel
+@{
+    ViewData["Title"] = "Yeni Ürün";
+    var kategoriVar = ViewData["KategoriVar"] as bool? ?? false;
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="Index">Ürünler</a></li>
+                <li class="breadcrumb-item active">Yeni Ürün</li>
+            </ol>
+        </nav>
+        @if (!kategoriVar)
+        {
+            <div class="alert alert-warning">
+                Ürün ekleyebilmek için önce en az bir kategori oluşturmalısınız.
+                <a asp-page="/Kategoriler/Ekle" class="alert-link">Kategori ekle</a>
+            </div>
+        }
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h3 class="card-title mb-4">Yeni Ürün</h3>
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+                    <partial name="_UrunForm" for="Urun" />
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary" disabled="@(!kategoriVar)">Kaydet</button>
+                        <a asp-page="Index" class="btn btn-outline-secondary">İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

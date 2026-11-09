@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,11 +21,20 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Ana Sayfa</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Urunler/Index">Ürünler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Kategoriler/Index">Kategoriler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Depolar/Index">Depolar</a>
+                            </li>
+                        }
                         @if (User.IsInRole("Yonetici"))
                         {
                             <li class="nav-item">
@@ -40,6 +49,20 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            @if (TempData["Basari"] is string basari)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @basari
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
+            @if (TempData["Hata"] is string hata)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @hata
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
             @RenderBody()
         </main>
     </div>

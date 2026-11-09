@@ -1,0 +1,48 @@
+@page "{id:int}"
+@model StokTakip.Pages.Urunler.SilModel
+@{
+    ViewData["Title"] = "Ürün Sil";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="Index">Ürünler</a></li>
+                <li class="breadcrumb-item active">Sil</li>
+            </ol>
+        </nav>
+        <div class="card shadow-sm border-danger-subtle">
+            <div class="card-body p-4">
+                <h3 class="card-title text-danger mb-3">Ürün Sil</h3>
+                <dl class="row mb-4">
+                    <dt class="col-sm-4">Ürün Kodu</dt>
+                    <dd class="col-sm-8"><code>@Model.Urun.UrunKodu</code></dd>
+                    <dt class="col-sm-4">Ürün Adı</dt>
+                    <dd class="col-sm-8">@Model.Urun.Ad</dd>
+                    <dt class="col-sm-4">Kategori</dt>
+                    <dd class="col-sm-8">@Model.Urun.Kategori?.Ad</dd>
+                    <dt class="col-sm-4">Mevcut Miktar</dt>
+                    <dd class="col-sm-8">@Model.Urun.MevcutMiktar</dd>
+                </dl>
+                @if (!Model.Silinebilir)
+                {
+                    <div class="alert alert-warning">
+                        Bu ürüne ait <strong>@Model.HareketSayisi stok hareketi</strong> ve
+                        <strong>@Model.TalepSayisi talep</strong> kaydı bulunduğu için silinemez.
+                        Stok geçmişinin korunması gerekir.
+                    </div>
+                    <a asp-page="Index" class="btn btn-outline-secondary">Geri Dön</a>
+                }
+                else
+                {
+                    <p>Bu ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+                    <form method="post" class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                        <a asp-page="Index" class="btn btn-outline-secondary">İptal</a>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

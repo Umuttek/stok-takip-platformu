@@ -19,7 +19,19 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Hesap/Giris";
     options.AccessDeniedPath = "/Hesap/ErisimEngellendi";
 });
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddMvcOptions(options =>
+    {
+        // Model bağlama (ör. sayı alanına harf girilmesi) hata mesajlarını Türkçeleştir.
+        var m = options.ModelBindingMessageProvider;
+        m.SetValueMustBeANumberAccessor(alan => $"{alan} alanı geçerli bir sayı olmalıdır.");
+        m.SetValueMustNotBeNullAccessor(alan => $"{alan} alanı zorunludur.");
+        m.SetMissingBindRequiredValueAccessor(alan => $"{alan} alanı zorunludur.");
+        m.SetAttemptedValueIsInvalidAccessor((deger, alan) => $"'{deger}' değeri {alan} alanı için geçersiz.");
+        m.SetNonPropertyAttemptedValueIsInvalidAccessor(deger => $"'{deger}' değeri geçersiz.");
+        m.SetUnknownValueIsInvalidAccessor(alan => $"{alan} alanı için girilen değer geçersiz.");
+        m.SetValueIsInvalidAccessor(deger => $"'{deger}' değeri geçersiz.");
+    });
 var app = builder.Build();
 using (var scope = app.Services.CreateScope()){await RolVeAdmin.OlusturAsync(scope.ServiceProvider, app.Configuration);}
 // Configure the HTTP request pipeline.
