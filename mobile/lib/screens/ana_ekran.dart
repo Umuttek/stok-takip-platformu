@@ -5,7 +5,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'giris_ekrani.dart';
 import 'kullanici_ekle_ekrani.dart';
-
+import 'urun_listesi_ekrani.dart';
 class _Islem {
   final IconData ikon;
   final String baslik;
@@ -17,7 +17,7 @@ class _Islem {
 }
 
 Widget _kullaniciEkleEkrani() => const KullaniciEkleEkrani();
-
+Widget _urunListesiEkrani() => const UrunListesiEkrani();
 class _Istatistik {
   final IconData ikon;
   final String baslik;
@@ -49,6 +49,9 @@ const _calisanIstatistikleri = [
 ];
 
 const _yoneticiIslemleri = [
+  _Islem(Icons.inventory_2_rounded, 'Ürünler', 'Ürünleri listele ve ara',
+      Color(0xFF0EA5E9),
+      ekran: _urunListesiEkrani),
   _Islem(Icons.add_box_rounded, 'Ürün Ekle', 'Yeni ürün kaydı oluştur',
       Color(0xFF4F46E5)),
   _Islem(Icons.edit_rounded, 'Ürün Düzenle', 'Ürün bilgilerini güncelle',
@@ -62,7 +65,8 @@ const _calisanIslemleri = [
   _Islem(Icons.point_of_sale_rounded, 'Satış Yap', 'Stoktan satış kaydı gir',
       Color(0xFF4F46E5)),
   _Islem(Icons.search_rounded, 'Stok Sorgula', 'Ürün stok durumunu gör',
-      Color(0xFF0D9488)),
+      Color(0xFF0D9488),
+      ekran: _urunListesiEkrani),
 ];
 
 /// Role göre doğru ana ekranı seçer.

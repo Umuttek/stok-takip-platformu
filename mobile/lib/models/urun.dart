@@ -6,6 +6,7 @@ class Urun {
   final int mevcutMiktar;
   final int kritikStokSeviyesi;
   final int kategoriId;
+  final String kategoriAdi;
   const Urun({
     required this.id,
     required this.urunKodu,
@@ -14,6 +15,7 @@ class Urun {
     required this.mevcutMiktar,
     required this.kritikStokSeviyesi,
     required this.kategoriId,
+    this.kategoriAdi = '',
   });
   factory Urun.fromJson(Map<String, dynamic> json) {
     return Urun(
@@ -24,6 +26,7 @@ class Urun {
       mevcutMiktar: json['mevcutMiktar'] as int,
       kritikStokSeviyesi: json['kritikStokSeviyesi'] as int,
       kategoriId: json['kategoriId'] as int,
+      kategoriAdi: json['kategoriAdi'] as String? ?? '',
     );
   }
   Map<String, dynamic> toJson() {
@@ -37,5 +40,5 @@ class Urun {
       'kategoriId': kategoriId,
     };
   }
-  bool get kritikSeviyede => mevcutMiktar < kritikStokSeviyesi;
+  bool get kritikSeviyede => mevcutMiktar <= kritikStokSeviyesi;
 }
