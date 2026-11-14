@@ -1,0 +1,54 @@
+@page
+@model StokTakip.Pages.StokHareketleri.IndexModel
+@{
+    ViewData["Title"] = "Stok Hareketleri";
+}
+<h2>Stok Hareketleri</h2>
+@if (TempData["Mesaj"] != null)
+{
+    <div class="alert alert-success">@TempData["Mesaj"]</div>
+}
+@if (TempData["Uyari"] != null)
+{
+    <div class="alert alert-warning">@TempData["Uyari"]</div>
+}
+<div class="mb-3">
+    <a class="btn btn-success" href="/StokHareketleri/Ekle?tur=Giris">+ Stok Girişi</a>
+    <a class="btn btn-danger" href="/StokHareketleri/Ekle?tur=Cikis">- Stok Çıkışı</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Ürün</th>
+                <th>Depo</th>
+                <th>Tür</th>
+                <th>Miktar</th>
+                <th>İşlemi Yapan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var h in Model.Hareketler)
+            {
+                <tr>
+                    <td>@h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@h.Urun?.Ad</td>
+                    <td>@h.Depo?.Ad</td>
+                    <td>
+                        @if (h.HareketTuru == "Giris")
+                        {
+                            <span class="badge bg-success">Giriş</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Çıkış</span>
+                        }
+                    </td>
+                    <td>@h.Miktar</td>
+                    <td>@h.Kullanici?.AdSoyad</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
