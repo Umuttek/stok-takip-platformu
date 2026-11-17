@@ -2,12 +2,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/urun.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../services/urun_servisi.dart';
+import 'urun_detay_ekrani.dart';
+import 'urun_form_ekrani.dart';
+
 class UrunListesiEkrani extends StatefulWidget {
   const UrunListesiEkrani({super.key});
   @override
   State<UrunListesiEkrani> createState() => _UrunListesiEkraniState();
 }
+
 class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
   final _servis = UrunServisi();
   final _aramaController = TextEditingController();
@@ -15,17 +20,22 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
   List<Urun> _urunler = [];
   bool _yukleniyor = true;
   String? _hata;
+
+  bool get _yoneticiMi => AuthService.instance.aktifOturum?.yoneticiMi ?? false;
+
   @override
   void initState() {
     super.initState();
     _yukle();
   }
+
   @override
   void dispose() {
     _aramaZamanlayici?.cancel();
     _aramaController.dispose();
     super.dispose();
   }
+
   Future<void> _yukle() async {
     setState(() {
       _yukleniyor = true;
@@ -46,19 +56,39 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
       });
     }
   }
+
   void _aramaDegisti(String metin) {
     _aramaZamanlayici?.cancel();
     _aramaZamanlayici = Timer(const Duration(milliseconds: 400), _yukle);
   }
-  void _detayaGit(Urun urun) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${urun.ad} detay ekranı yakında eklenecek.')),
+
+  Future<void> _detayaGit(Urun urun) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => UrunDetayEkrani(urun: urun)),
     );
+    if (mounted) _yukle();
   }
+
+  Future<void> _yeniUrunEkle() async {
+    final eklenen = await Navigator.of(context).push<Urun>(
+      MaterialPageRoute(builder: (_) => const UrunFormEkrani()),
+    );
+    if (eklenen != null && mounted) {
+      _yukle();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Ürünler')),
+      floatingActionButton: _yoneticiMi
+          ? FloatingActionButton.extended(
+              onPressed: _yeniUrunEkle,
+              icon: const Icon(Icons.add),
+              label: const Text('Yeni Ürün'),
+            )
+          : null,
       body: Column(
         children: [
           Padding(
@@ -78,6 +108,7 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
       ),
     );
   }
+
   Widget _icerik() {
     if (_yukleniyor) {
       return const Center(child: CircularProgressIndicator());
@@ -109,17 +140,23 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
     return RefreshIndicator(
       onRefresh: _yukle,
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
         itemCount: _urunler.length,
         separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) => _urunKarti(_urunler[index]),
       ),
     );
   }
+
   Widget _urunKarti(Urun urun) {
     final kritik = urun.kritikSeviyede;
     final Color renk =
         kritik ? Colors.orange : Theme.of(context).colorScheme.primary;
+    final stokluDepolar = urun.depoStoklari.where((d) => d.miktar > 0).toList();
+    final depoBilgisi = stokluDepolar.isEmpty
+        ? ''
+        : ' • ${stokluDepolar.map((d) => d.depoAdi).join(', ')}';
+
     return Card(
       child: ListTile(
         onTap: () => _detayaGit(urun),
@@ -134,7 +171,7 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
           urun.ad,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text('${urun.urunKodu} • ${urun.kategoriAdi}'),
+        subtitle: Text('${urun.urunKodu} • ${urun.kategoriAdi}$depoBilgisi'),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,

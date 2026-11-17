@@ -3,21 +3,29 @@ import '../models/ozet_bilgi.dart';
 import '../models/oturum.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import 'depolar_ekrani.dart';
 import 'giris_ekrani.dart';
 import 'kullanici_ekle_ekrani.dart';
+import 'stok_hareket_ekrani.dart';
+import 'urun_form_ekrani.dart';
 import 'urun_listesi_ekrani.dart';
+
 class _Islem {
   final IconData ikon;
   final String baslik;
   final String aciklama;
   final Color renk;
-  /// Null ise ekran henüz yazılmamıştır ("yakında" mesajı gösterilir).
   final Widget Function()? ekran;
   const _Islem(this.ikon, this.baslik, this.aciklama, this.renk, {this.ekran});
 }
 
 Widget _kullaniciEkleEkrani() => const KullaniciEkleEkrani();
 Widget _urunListesiEkrani() => const UrunListesiEkrani();
+Widget _urunEkleEkrani() => const UrunFormEkrani();
+Widget _depolarEkrani() => const DepolarEkrani();
+Widget _stokHareketEkrani() => const StokHareketEkrani();
+Widget _satisYapEkrani() => const StokHareketEkrani(baslangicTuru: 'Cikis');
+
 class _Istatistik {
   final IconData ikon;
   final String baslik;
@@ -49,24 +57,36 @@ const _calisanIstatistikleri = [
 ];
 
 const _yoneticiIslemleri = [
-  _Islem(Icons.inventory_2_rounded, 'Ürünler', 'Ürünleri listele ve ara',
-      Color(0xFF0EA5E9),
+  _Islem(Icons.inventory_2_rounded, 'Ürünler & Düzenleme',
+      'Ürünleri listele, detay ve düzenleme', Color(0xFF0EA5E9),
       ekran: _urunListesiEkrani),
-  _Islem(Icons.add_box_rounded, 'Ürün Ekle', 'Yeni ürün kaydı oluştur',
-      Color(0xFF4F46E5)),
-  _Islem(Icons.edit_rounded, 'Ürün Düzenle', 'Ürün bilgilerini güncelle',
-      Color(0xFF0D9488)),
+  _Islem(Icons.add_box_rounded, 'Ürün Ekle',
+      'Yeni ürün oluştur ve depoya zimmetle', Color(0xFF4F46E5),
+      ekran: _urunEkleEkrani),
+  _Islem(Icons.warehouse_rounded, 'Depolar',
+      'Depoları ve zimmetli stokları yönet', Color(0xFF0D9488),
+      ekran: _depolarEkrani),
+  _Islem(Icons.swap_vert_circle_rounded, 'Stok Giriş / Çıkış',
+      'Depolar üzerinden stok giriş-çıkış yap', Color(0xFFF59E0B),
+      ekran: _stokHareketEkrani),
   _Islem(Icons.person_add_alt_1_rounded, 'Yeni Kullanıcı Ekle',
       'Yönetici veya çalışan hesabı aç', Color(0xFF7C3AED),
       ekran: _kullaniciEkleEkrani),
 ];
 
 const _calisanIslemleri = [
-  _Islem(Icons.point_of_sale_rounded, 'Satış Yap', 'Stoktan satış kaydı gir',
-      Color(0xFF4F46E5)),
-  _Islem(Icons.search_rounded, 'Stok Sorgula', 'Ürün stok durumunu gör',
-      Color(0xFF0D9488),
+  _Islem(Icons.point_of_sale_rounded, 'Satış Yap (Stok Çıkışı)',
+      'Depodan ürün çıkışı / satış kaydı gir', Color(0xFFE11D48),
+      ekran: _satisYapEkrani),
+  _Islem(Icons.swap_vert_circle_rounded, 'Stok Giriş / Çıkış',
+      'Depolara stok giriş veya çıkış işlemi yap', Color(0xFF4F46E5),
+      ekran: _stokHareketEkrani),
+  _Islem(Icons.search_rounded, 'Stok Sorgula',
+      'Ürün ve depo stok durumunu gör', Color(0xFF0D9488),
       ekran: _urunListesiEkrani),
+  _Islem(Icons.warehouse_rounded, 'Depolar',
+      'Depoları ve zimmetli ürünleri görüntüle', Color(0xFF0EA5E9),
+      ekran: _depolarEkrani),
 ];
 
 /// Role göre doğru ana ekranı seçer.
@@ -155,13 +175,14 @@ class _AnaIskeletDurum extends State<_AnaIskelet> {
     }
   }
 
-  void _islemAc(_Islem islem) {
+  Future<void> _islemAc(_Islem islem) async {
     final ekran = islem.ekran;
     if (ekran == null) {
       _yakinda(islem.baslik);
       return;
     }
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ekran()));
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ekran()));
+    if (mounted) _ozetiYukle();
   }
 
   void _yakinda(String ad) {
@@ -297,7 +318,6 @@ class _AnaIskeletDurum extends State<_AnaIskelet> {
     );
   }
 
-  /// İstatistik kartlarını ikili satırlara dizer; tek kalan kart tam genişlik olur.
   Widget _istatistikler() {
     final liste = widget.istatistikler;
     final satirlar = <Widget>[];
