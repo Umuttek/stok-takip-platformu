@@ -1,0 +1,213 @@
+@page "{id:int}"
+@model StokTakip.Pages.Urunler.DetayModel
+@{
+    ViewData["Title"] = $"{Model.Urun.Ad} - Ürün Detayı";
+    var yonetici = User.IsInRole("Yonetici");
+    var kritik = Model.Urun.KritikMi;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 sayfa-baslik-bar">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-page="Index">Ürünler</a></li>
+            <li class="breadcrumb-item active">@Model.Urun.Ad</li>
+        </ol>
+    </nav>
+    <div class="aksiyon-grup d-flex flex-wrap gap-2">
+        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@Model.Urun.Id" asp-route-depoId="@Model.VarsayilanDepoId"
+           class="btn btn-sm btn-success fw-semibold">+ Stok Girişi</a>
+        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-urunId="@Model.Urun.Id" asp-route-depoId="@Model.VarsayilanDepoId"
+           class="btn btn-sm btn-danger fw-semibold">- Stok Çıkışı</a>
+        @if (yonetici)
+        {
+            <a asp-page="Duzenle" asp-route-id="@Model.Urun.Id" class="btn btn-sm btn-primary fw-semibold">Ürünü Düzenle</a>
+            <a asp-page="Sil" asp-route-id="@Model.Urun.Id" class="btn btn-sm btn-outline-danger">Sil</a>
+        }
+    </div>
+</div>
+
+@if (kritik)
+{
+    <div class="alert alert-warning border-warning shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <strong>Kritik Stok Uyarısı:</strong> Bu ürünün mevcut stoğu (<strong>@Model.Urun.MevcutMiktar</strong>), kritik stok seviyesinin (<strong>@Model.Urun.KritikStokSeviyesi</strong>) altında veya bu seviyeye eşit.
+        </div>
+        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@Model.Urun.Id" asp-route-depoId="@Model.VarsayilanDepoId"
+           class="btn btn-sm btn-warning fw-semibold">+ Hemen Stok Ekle</a>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Sol Sütun: Fotoğraf, Ürün Özeti ve Bilgileri -->
+    <div class="col-lg-5">
+        @if (!string.IsNullOrWhiteSpace(Model.FotografBase64))
+        {
+            <div class="card shadow-sm border-0 mb-3 overflow-hidden">
+                <img src="data:image/jpeg;base64,@Model.FotografBase64"
+                     alt="@Model.Urun.Ad"
+                     style="max-height: 260px; width: 100%; object-fit: cover;" />
+            </div>
+        }
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body p-3 p-md-4">
+                <h3 class="h4 fw-bold mb-2">@Model.Urun.Ad</h3>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge text-bg-primary font-monospace px-3 py-2">
+                        Barkod: @Model.Urun.UrunKodu
+                    </span>
+                    @if (Model.Urun.Kategori != null)
+                    {
+                        <span class="badge text-bg-info px-3 py-2">
+                            @Model.Urun.Kategori.Ad
+                        </span>
+                    }
+                    <span class="badge @(kritik ? "text-bg-danger" : "text-bg-success") px-3 py-2">
+                        @(kritik ? "Kritik Stok" : "Stok Yeterli")
+                    </span>
+                </div>
+
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 bg-body-tertiary border">
+                            <div class="fs-2 fw-bold @(kritik ? "text-danger" : "text-primary")">@Model.Urun.MevcutMiktar</div>
+                            <div class="fw-semibold small">Mevcut Miktar</div>
+                            <div class="text-muted small">Toplam stok adeti</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 bg-body-tertiary border">
+                            <div class="fs-2 fw-bold text-secondary">@Model.Urun.KritikStokSeviyesi</div>
+                            <div class="fw-semibold small">Kritik Stok Seviyesi</div>
+                            <div class="text-muted small">Uyarı eşiği</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+                <h6 class="fw-bold text-uppercase small text-muted mb-2">Ürün Bilgileri</h6>
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-5 text-muted">Ürün Barkod Kodu</dt>
+                    <dd class="col-sm-7 font-monospace fw-bold">@Model.Urun.UrunKodu <span class="badge text-bg-light border">EAN-13</span></dd>
+
+                    <dt class="col-sm-5 text-muted">Ürün Adı</dt>
+                    <dd class="col-sm-7 fw-semibold">@Model.Urun.Ad</dd>
+
+                    <dt class="col-sm-5 text-muted">Kategori</dt>
+                    <dd class="col-sm-7">@(Model.Urun.Kategori?.Ad ?? "Belirtilmemiş")</dd>
+
+                    <dt class="col-sm-5 text-muted">Açıklama</dt>
+                    <dd class="col-sm-7 mb-0">@(string.IsNullOrWhiteSpace(Model.Urun.Aciklama) ? "Açıklama bulunmuyor." : Model.Urun.Aciklama)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ Sütun: Depo Zimmet Dağılımı ve Son Stok Hareketleri -->
+    <div class="col-lg-7">
+        <!-- Depo Zimmet Dağılımı (Mobil ile birebir) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <h5 class="mb-0 fw-bold">Depo Zimmet Dağılımı</h5>
+                    <small class="text-muted">Ürünün kayıtlı depolardaki net stok dağılımı (Stok miktarına göre sıralı)</small>
+                </div>
+                <span class="badge text-bg-secondary">@Model.DepoStoklari.Count(d => d.Miktar > 0) / @Model.DepoStoklari.Count depoda</span>
+            </div>
+            @if (Model.DepoStoklari.Count == 0)
+            {
+                <div class="card-body text-muted small text-center py-4">
+                    Sistemde kayıtlı depo bulunmuyor.
+                </div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var d in Model.DepoStoklari)
+                    {
+                        var stokVar = d.Miktar > 0;
+                        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                            <div>
+                                <div class="fw-bold @(stokVar ? "text-dark" : "text-muted")">
+                                    @d.DepoAdi
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(d.DepoKonum))
+                                {
+                                    <div class="small text-muted">@d.DepoKonum</div>
+                                }
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge rounded-pill @(stokVar ? "text-bg-success" : "text-bg-secondary") fs-6 px-3 py-2">
+                                    @d.Miktar adet
+                                </span>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@Model.Urun.Id" asp-route-depoId="@d.DepoId"
+                                   class="btn btn-sm btn-outline-success" title="Bu depoya giriş yap">+</a>
+                                @if (stokVar)
+                                {
+                                    <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-urunId="@Model.Urun.Id" asp-route-depoId="@d.DepoId"
+                                       class="btn btn-sm btn-outline-danger" title="Bu depodan çıkış yap">-</a>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <!-- Bu Ürüne Ait Son Stok Hareketleri -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">Son Stok Hareketleri</h5>
+                <a asp-page="/StokHareketleri/Index" asp-route-urunId="@Model.Urun.Id" class="small text-decoration-none">
+                    Tümünü Gör →
+                </a>
+            </div>
+            @if (Model.SonHareketler.Count == 0)
+            {
+                <div class="card-body text-muted small text-center py-4">
+                    Bu ürüne ait stok hareketi kaydı bulunmuyor.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 table-responsive-cards">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Depo</th>
+                                <th class="text-center">Tür</th>
+                                <th class="text-end">Miktar</th>
+                                <th>Personel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in Model.SonHareketler)
+                            {
+                                var giris = h.HareketTuru == "Giris";
+                                var personel = !string.IsNullOrWhiteSpace(h.Kullanici?.AdSoyad)
+                                    ? h.Kullanici.AdSoyad
+                                    : (h.Kullanici?.Email ?? "-");
+                                <tr>
+                                    <td data-label="Tarih" class="small text-muted text-nowrap">
+                                        @h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                    </td>
+                                    <td data-label="Depo" class="fw-medium">@(h.Depo?.Ad ?? "-")</td>
+                                    <td data-label="Tür" class="text-center">
+                                        <span class="badge @(giris ? "text-bg-success" : "text-bg-danger")">
+                                            @(giris ? "+ Giriş" : "- Çıkış")
+                                        </span>
+                                    </td>
+                                    <td data-label="Miktar" class="text-end fw-bold @(giris ? "text-success" : "text-danger")">
+                                        @(giris ? "+" : "-")@h.Miktar
+                                    </td>
+                                    <td data-label="Personel" class="small">@personel</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

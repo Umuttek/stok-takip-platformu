@@ -1,0 +1,183 @@
+<script>
+    (function () {
+        // 1. Ürün Fotoğrafı Seçimi, Küçültme (Max 1024px, JPEG 0.75) ve Önizleme
+        const dosyaGirdi = document.getElementById('fotografDosyaGirdi');
+        const base64Girdi = document.getElementById('FotografBase64');
+        const kaldirGirdi = document.getElementById('FotografiKaldir');
+        const onizlemeKutusu = document.getElementById('fotografOnizlemeKutusu');
+        const onizlemeImg = document.getElementById('fotografOnizlemeImg');
+        const seciciAlan = document.getElementById('fotografSeciciAlan');
+        const kaldirBtn = document.getElementById('fotografKaldirBtn');
+
+        if (dosyaGirdi) {
+            dosyaGirdi.addEventListener('change', function (e) {
+                const dosya = e.target.files && e.target.files[0];
+                if (!dosya) return;
+
+                const okuyucu = new FileReader();
+                okuyucu.onload = function (ev) {
+                    const img = new Image();
+                    img.onload = function () {
+                        const maxBoyut = 1024;
+                        let genislik = img.width;
+                        let yukseklik = img.height;
+
+                        if (genislik > maxBoyut || yukseklik > maxBoyut) {
+                            if (genislik > yukseklik) {
+                                yukseklik = Math.round((yukseklik * maxBoyut) / genislik);
+                                genislik = maxBoyut;
+                            } else {
+                                genislik = Math.round((genislik * maxBoyut) / yukseklik);
+                                yukseklik = maxBoyut;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = genislik;
+                        canvas.height = yukseklik;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, genislik, yukseklik);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+                        const saltBase64 = dataUrl.split(',')[1] || '';
+
+                        base64Girdi.value = saltBase64;
+                        kaldirGirdi.value = 'false';
+                        onizlemeImg.src = dataUrl;
+                        onizlemeKutusu.classList.remove('d-none');
+                        seciciAlan.classList.add('d-none');
+                    };
+                    img.src = ev.target.result;
+                };
+                okuyucu.readAsDataURL(dosya);
+            });
+        }
+
+        if (kaldirBtn) {
+            kaldirBtn.addEventListener('click', function () {
+                base64Girdi.value = '';
+                kaldirGirdi.value = 'true';
+                if (dosyaGirdi) dosyaGirdi.value = '';
+                onizlemeImg.src = '';
+                onizlemeKutusu.classList.add('d-none');
+                seciciAlan.classList.remove('d-none');
+            });
+        }
+
+        // 2. Hızlı Kategori Ekle (Modal -> AJAX)
+        const kategoriKaydetBtn = document.getElementById('hizliKategoriKaydetBtn');
+        const kategoriSelect = document.getElementById('kategoriSelect');
+        const kategoriHata = document.getElementById('hizliKategoriHata');
+
+        if (kategoriKaydetBtn && kategoriSelect) {
+            kategoriKaydetBtn.addEventListener('click', async function () {
+                const adInput = document.getElementById('yeniKategoriAd');
+                const aciklamaInput = document.getElementById('yeniKategoriAciklama');
+                const ad = (adInput.value || '').trim();
+                const aciklama = (aciklamaInput.value || '').trim();
+
+                if (ad.length < 2) {
+                    kategoriHata.textContent = 'Kategori adı en az 2 karakter olmalıdır.';
+                    kategoriHata.classList.remove('d-none');
+                    return;
+                }
+
+                kategoriHata.classList.add('d-none');
+                kategoriKaydetBtn.disabled = true;
+
+                try {
+                    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                    const formVeri = new FormData();
+                    formVeri.append('ad', ad);
+                    formVeri.append('aciklama', aciklama);
+
+                    const yanit = await fetch('?handler=HizliKategoriEkle', {
+                        method: 'POST',
+                        headers: tokenInput ? { 'RequestVerificationToken': tokenInput.value } : {},
+                        body: formVeri
+                    });
+
+                    const sonuc = await yanit.json();
+                    if (!yanit.ok) {
+                        kategoriHata.textContent = sonuc.mesaj || 'Kategori eklenemedi.';
+                        kategoriHata.classList.remove('d-none');
+                        return;
+                    }
+
+                    const yeniOption = new Option(sonuc.ad, sonuc.id, true, true);
+                    kategoriSelect.add(yeniOption);
+                    kategoriSelect.value = String(sonuc.id);
+
+                    adInput.value = '';
+                    aciklamaInput.value = '';
+                    const modalEl = document.getElementById('hizliKategoriModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                } catch {
+                    kategoriHata.textContent = 'İstek sırasında bir hata oluştu.';
+                    kategoriHata.classList.remove('d-none');
+                } finally {
+                    kategoriKaydetBtn.disabled = false;
+                }
+            });
+        }
+
+        // 3. Hızlı Depo Ekle (Modal -> AJAX)
+        const depoKaydetBtn = document.getElementById('hizliDepoKaydetBtn');
+        const depoSelect = document.getElementById('depoSelect');
+        const depoHata = document.getElementById('hizliDepoHata');
+
+        if (depoKaydetBtn && depoSelect) {
+            depoKaydetBtn.addEventListener('click', async function () {
+                const adInput = document.getElementById('yeniDepoAd');
+                const konumInput = document.getElementById('yeniDepoKonum');
+                const ad = (adInput.value || '').trim();
+                const konum = (konumInput.value || '').trim();
+
+                if (ad.length < 2) {
+                    depoHata.textContent = 'Depo adı en az 2 karakter olmalıdır.';
+                    depoHata.classList.remove('d-none');
+                    return;
+                }
+
+                depoHata.classList.add('d-none');
+                depoKaydetBtn.disabled = true;
+
+                try {
+                    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                    const formVeri = new FormData();
+                    formVeri.append('ad', ad);
+                    formVeri.append('konum', konum);
+
+                    const yanit = await fetch('?handler=HizliDepoEkle', {
+                        method: 'POST',
+                        headers: tokenInput ? { 'RequestVerificationToken': tokenInput.value } : {},
+                        body: formVeri
+                    });
+
+                    const sonuc = await yanit.json();
+                    if (!yanit.ok) {
+                        depoHata.textContent = sonuc.mesaj || 'Depo eklenemedi.';
+                        depoHata.classList.remove('d-none');
+                        return;
+                    }
+
+                    const yeniOption = new Option(sonuc.ad, sonuc.id, true, true);
+                    depoSelect.add(yeniOption);
+                    depoSelect.value = String(sonuc.id);
+
+                    adInput.value = '';
+                    konumInput.value = '';
+                    const modalEl = document.getElementById('hizliDepoModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                } catch {
+                    depoHata.textContent = 'İstek sırasında bir hata oluştu.';
+                    depoHata.classList.remove('d-none');
+                } finally {
+                    depoKaydetBtn.disabled = false;
+                }
+            });
+        }
+    })();
+</script>

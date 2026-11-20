@@ -4,23 +4,25 @@
     ViewData["Title"] = "Kategoriler";
     var yonetici = User.IsInRole("Yonetici");
 }
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 sayfa-baslik-bar">
     <div>
         <h2 class="mb-0">Kategoriler</h2>
         <small class="text-muted">Toplam @Model.Kategoriler.Count kategori</small>
     </div>
     @if (yonetici)
     {
-        <a asp-page="Ekle" class="btn btn-primary">+ Yeni Kategori</a>
+        <div class="aksiyon-grup">
+            <a asp-page="Ekle" class="btn btn-primary">+ Yeni Kategori</a>
+        </div>
     }
 </div>
 
 <form method="get" class="row g-2 mb-3">
-    <div class="col-sm-8 col-md-6">
+    <div class="col-12 col-sm-8 col-md-6">
         <input type="search" name="arama" value="@Model.Arama" class="form-control" placeholder="Kategori adına göre ara..." />
     </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Ara</button>
+    <div class="col-12 col-sm-auto d-flex gap-2">
+        <button type="submit" class="btn btn-outline-secondary flex-grow-1">Ara</button>
         @if (!string.IsNullOrEmpty(Model.Arama))
         {
             <a asp-page="Index" class="btn btn-link">Temizle</a>
@@ -36,9 +38,9 @@
 }
 else
 {
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 table-responsive-cards">
                 <thead class="table-light">
                     <tr>
                         <th>Kategori Adı</th>
@@ -51,14 +53,14 @@ else
                     @foreach (var k in Model.Kategoriler)
                     {
                         <tr>
-                            <td class="fw-semibold">@k.Ad</td>
-                            <td class="text-muted">@(string.IsNullOrWhiteSpace(k.Aciklama) ? "-" : k.Aciklama)</td>
-                            <td class="text-center">
-                                <a asp-page="/Urunler/Index" asp-route-kategoriId="@k.Id" class="badge rounded-pill text-bg-secondary text-decoration-none">@k.UrunSayisi</a>
+                            <td data-label="Kategori Adı" class="fw-semibold">@k.Ad</td>
+                            <td data-label="Açıklama" class="text-muted">@(string.IsNullOrWhiteSpace(k.Aciklama) ? "-" : k.Aciklama)</td>
+                            <td data-label="Ürün Sayısı" class="text-center">
+                                <a asp-page="/Urunler/Index" asp-route-kategoriId="@k.Id" class="badge rounded-pill text-bg-secondary text-decoration-none">@k.UrunSayisi ürün</a>
                             </td>
                             @if (yonetici)
                             {
-                                <td class="text-end text-nowrap">
+                                <td data-label="İşlemler" class="text-end text-nowrap">
                                     <a asp-page="Duzenle" asp-route-id="@k.Id" class="btn btn-sm btn-outline-primary">Düzenle</a>
                                     <a asp-page="Sil" asp-route-id="@k.Id" class="btn btn-sm btn-outline-danger">Sil</a>
                                 </td>
@@ -70,4 +72,3 @@ else
         </div>
     </div>
 }
-

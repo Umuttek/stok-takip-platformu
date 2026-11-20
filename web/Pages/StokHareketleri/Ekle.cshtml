@@ -1,44 +1,394 @@
 @page
 @model StokTakip.Pages.StokHareketleri.EkleModel
 @{
-    ViewData["Title"] = Model.Girdi.HareketTuru == "Cikis" ? "Stok Çıkışı" : "Stok Girişi";
+    var cikisMi = Model.Girdi.HareketTuru == "Cikis";
+    ViewData["Title"] = cikisMi ? "Stok Çıkışı / Satış" : "Stok Girişi Yap";
+    var yonetici = User.IsInRole("Yonetici");
+    var islemYapilabilir = Model.UrunVar && Model.DepoVar;
 }
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2 class="mb-3">@ViewData["Title"]</h2>
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="mb-3">
-                <label asp-for="Girdi.HareketTuru" class="form-label"></label>
-                <select asp-for="Girdi.HareketTuru" class="form-select">
-                    <option value="Giris">Giriş</option>
-                    <option value="Cikis">Çıkış</option>
-                </select>
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a asp-page="/Index">Ana Sayfa</a></li>
+        <li class="breadcrumb-item"><a asp-page="/StokHareketleri/Index">Stok Hareketleri</a></li>
+        <li class="breadcrumb-item active" aria-current="page" id="breadcrumbBaslik">@ViewData["Title"]</li>
+    </ol>
+</nav>
+
+@if (!Model.UrunVar || !Model.DepoVar)
+{
+    <div class="alert alert-warning shadow-sm">
+        <div class="fw-semibold mb-1">Stok hareketi kaydedebilmek için sistemde kayıtlı ürün ve depo bulunmalıdır.</div>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            @if (!Model.UrunVar && yonetici)
+            {
+                <a asp-page="/Urunler/Ekle" class="btn btn-sm btn-warning">+ İlk Ürünü Ekle</a>
+            }
+            @if (!Model.DepoVar && yonetici)
+            {
+                <a asp-page="/Depolar/Ekle" class="btn btn-sm btn-warning">+ İlk Depoyu Ekle</a>
+            }
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div id="formKartBaslik" class="card-header py-3 @(cikisMi ? "bg-danger text-white" : "bg-success text-white")">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="h5 mb-0 fw-bold" id="sayfaBaslikMetni">
+                            @(cikisMi ? "Stok Çıkışı / Satış (-)" : "Stok Girişi (+)")
+                        </h3>
+                        <small class="opacity-75" id="sayfaAltMetni">
+                            @(cikisMi ? "Satış, sevkiyat veya kullanım nedeniyle seçilen depodan düşülecek miktarı girin." : "Tedarik, iade veya sayım fazlası olarak seçilen depoya giren miktarı girin.")
+                        </small>
+                    </div>
+                    <span class="badge bg-white @(cikisMi ? "text-danger" : "text-success") fs-6 px-3 py-2" id="turRozet">
+                        @(cikisMi ? "- ÇIKIŞ" : "+ GİRİŞ")
+                    </span>
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="Girdi.UrunId" class="form-label"></label>
-                <select asp-for="Girdi.UrunId" asp-items="Model.UrunListesi" class="form-select">
-                    <option value="">-- Ürün seçin --</option>
-                </select>
-                <span asp-validation-for="Girdi.UrunId" class="text-danger"></span>
+
+            <div class="card-body p-3 p-md-4">
+                <form method="post" id="stokHareketForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                    <!-- Hareket Türü Seçimi (Mobil SegmentedButton ile Birebir) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">İşlem Türü <span class="text-danger">*</span></label>
+                        <div class="row g-2 hareket-tur-secici">
+                            <div class="col-6">
+                                <input type="radio" class="visually-hidden" asp-for="Girdi.HareketTuru" value="Giris" id="turGiris" />
+                                <label for="turGiris" class="tur-kart tur-kart-giris rounded-3 p-3 d-block text-center h-100">
+                                    <div class="fs-5 fw-bold text-success">Stok Girişi (+)</div>
+                                    <div class="small text-muted">Depoya ürün ekle</div>
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="visually-hidden" asp-for="Girdi.HareketTuru" value="Cikis" id="turCikis" />
+                                <label for="turCikis" class="tur-kart tur-kart-cikis rounded-3 p-3 d-block text-center h-100">
+                                    <div class="fs-5 fw-bold text-danger">Stok Çıkışı / Satış (-)</div>
+                                    <div class="small text-muted">Depodan ürün düş</div>
+                                </label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="Girdi.HareketTuru" class="text-danger small"></span>
+                    </div>
+
+                    <!-- İşlem Yapılacak Depo Seçimi (Mobil sıralaması ile uyumlu) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label asp-for="Girdi.DepoId" class="form-label fw-semibold mb-0">İşlem Yapılacak Depo <span class="text-danger">*</span></label>
+                            @if (yonetici)
+                            {
+                                <a asp-page="/Depolar/Ekle" class="small text-decoration-none">+ Yeni Depo</a>
+                            }
+                        </div>
+                        <select asp-for="Girdi.DepoId" asp-items="Model.DepoListesi" class="form-select" id="depoSecimi">
+                            <option value="">-- İşlem yapılacak depoyu seçin --</option>
+                        </select>
+                        <span asp-validation-for="Girdi.DepoId" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Ürün Seçimi -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label asp-for="Girdi.UrunId" class="form-label fw-semibold mb-0">Ürün <span class="text-danger">*</span></label>
+                            @if (yonetici)
+                            {
+                                <a asp-page="/Urunler/Ekle" class="small text-decoration-none">+ Yeni Ürün</a>
+                            }
+                        </div>
+                        <select asp-for="Girdi.UrunId" asp-items="Model.UrunListesi" class="form-select" id="urunSecimi">
+                            <option value="">-- İşlem yapılacak ürünü seçin --</option>
+                        </select>
+                        <span asp-validation-for="Girdi.UrunId" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Seçili Depodaki Mevcut Stok Bilgi Kutusu (Mobil ile birebir aynı) -->
+                    <div id="seciliDepoBilgiBand" class="p-2 px-3 rounded-3 mb-3 d-none">
+                        <span class="fw-bold small" id="seciliDepoBilgiMetni">Seçili depodaki mevcut stok: 0 adet</span>
+                    </div>
+
+                    <!-- Miktar ve Hızlı Seçim Butonları -->
+                    <div class="mb-4">
+                        <label asp-for="Girdi.Miktar" class="form-label fw-semibold" id="miktarEtiket">
+                            @(cikisMi ? "Depodan Çıkarılacak Miktar *" : "Depoya Eklenecek Miktar *")
+                        </label>
+                        <div class="input-group">
+                            <button type="button" class="btn btn-outline-secondary" id="miktarAzalt" aria-label="1 Azalt">-</button>
+                            <input asp-for="Girdi.Miktar" type="number" min="1" max="100000" class="form-control text-center fw-bold fs-5" id="miktarGirdi" />
+                            <button type="button" class="btn btn-outline-secondary" id="miktarArttir" aria-label="1 Arttır">+</button>
+                        </div>
+                        <span asp-validation-for="Girdi.Miktar" class="text-danger small"></span>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <span class="small text-muted me-1 align-self-center">Hızlı ekle:</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary hizli-miktar" data-ekle="1">+1</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary hizli-miktar" data-ekle="5">+5</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary hizli-miktar" data-ekle="10">+10</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary hizli-miktar" data-ekle="25">+25</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary hizli-miktar" data-ekle="50">+50</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary hizli-miktar" data-ekle="100">+100</button>
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none ms-auto" id="miktarSifirla">1'e Sıfırla</button>
+                        </div>
+                    </div>
+
+                    <!-- Aksiyon Butonları -->
+                    <div class="d-flex flex-column flex-sm-row gap-2 pt-2 border-top">
+                        <button type="submit" id="kaydetBtn" class="btn @(cikisMi ? "btn-danger" : "btn-success") fw-semibold flex-grow-1 py-2"
+                                disabled="@(!islemYapilabilir)">
+                            @(cikisMi ? "Depodan Stok Çıkışı Yap" : "Depoya Stok Girişi Yap")
+                        </button>
+                        <button type="submit" name="devam" value="yeni" class="btn btn-outline-primary py-2"
+                                disabled="@(!islemYapilabilir)">
+                            Kaydet ve Yeni İşlem
+                        </button>
+                        <a asp-page="./Index" class="btn btn-outline-secondary py-2">İptal</a>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <label asp-for="Girdi.DepoId" class="form-label"></label>
-                <select asp-for="Girdi.DepoId" asp-items="Model.DepoListesi" class="form-select">
-                    <option value="">-- Depo seçin --</option>
-                </select>
-                <span asp-validation-for="Girdi.DepoId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <!-- Sağ Sütun: Canlı Stok Simülasyonu ve Son Hareketler -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white fw-semibold py-3">
+                Anlık Stok ve Depo Zimmet Özeti
             </div>
-            <div class="mb-3">
-                <label asp-for="Girdi.Miktar" class="form-label"></label>
-                <input asp-for="Girdi.Miktar" class="form-control" />
-                <span asp-validation-for="Girdi.Miktar" class="text-danger"></span>
+            <div class="card-body">
+                <div id="urunSecilmediBilgi" class="text-muted small py-3 text-center">
+                    Stok detaylarını ve işlem sonrası tahmini miktarı görmek için soldan bir <strong>ürün</strong> seçin.
+                </div>
+
+                <div id="urunStokDetay" class="d-none">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge text-bg-light border font-monospace" id="ozetUrunKodu">-</span>
+                            <h5 class="mb-0 mt-1 fw-bold" id="ozetUrunAdi">-</h5>
+                            <small class="text-muted" id="ozetKategori">-</small>
+                        </div>
+                        <span class="badge" id="ozetKritikRozet">-</span>
+                    </div>
+
+                    <div class="row g-2 mb-3 text-center">
+                        <div class="col-4">
+                            <div class="p-2 rounded bg-body-tertiary border">
+                                <div class="text-muted small">Seçili Depo</div>
+                                <div class="fs-5 fw-bold text-primary" id="ozetDepoStok">0</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded bg-body-tertiary border">
+                                <div class="text-muted small">Toplam Stok</div>
+                                <div class="fs-5 fw-bold" id="ozetMevcutStok">0</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded bg-body-tertiary border" id="ozetSonrakiKutu">
+                                <div class="text-muted small">İşlem Sonrası</div>
+                                <div class="fs-5 fw-bold" id="ozetSonrakiStok">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="small text-muted mb-2">
+                        Kritik stok uyarı eşiği: <strong id="ozetKritikSeviye">0</strong> adet
+                    </div>
+
+                    <div id="canliUyariKutusu" class="alert py-2 px-3 small mb-0 d-none"></div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Kaydet</button>
-        </form>
-        <a href="/StokHareketleri" class="d-block mt-3">← Stok hareketlerine dön</a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <span class="fw-semibold">Son Stok Hareketleri</span>
+                <a asp-page="./Index" class="small text-decoration-none">Tümünü Gör →</a>
+            </div>
+            @if (Model.SonHareketler.Count == 0)
+            {
+                <div class="card-body text-muted small text-center py-4">
+                    Henüz kaydedilmiş bir stok hareketi bulunmuyor.
+                </div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush small">
+                    @foreach (var h in Model.SonHareketler)
+                    {
+                        var giris = h.HareketTuru == "Giris";
+                        var personel = !string.IsNullOrWhiteSpace(h.Kullanici?.AdSoyad) ? $" · {h.Kullanici.AdSoyad}" : "";
+                        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                            <div class="text-truncate">
+                                <div class="fw-semibold text-truncate">@h.Urun?.Ad</div>
+                                <div class="text-muted">
+                                    @h.Depo?.Ad · @h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")@personel
+                                </div>
+                            </div>
+                            <span class="badge @(giris ? "text-bg-success" : "text-bg-danger") fs-6">
+                                @(giris ? "+" : "-")@h.Miktar
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
     </div>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const urunVerileri = @Html.Raw(Model.UrunStokJson);
+            const urunMap = new Map(urunVerileri.map(u => [String(u.id), u]));
+
+            const turGiris = document.getElementById('turGiris');
+            const turCikis = document.getElementById('turCikis');
+            const urunSecimi = document.getElementById('urunSecimi');
+            const depoSecimi = document.getElementById('depoSecimi');
+            const miktarGirdi = document.getElementById('miktarGirdi');
+            const miktarEtiket = document.getElementById('miktarEtiket');
+            const miktarAzalt = document.getElementById('miktarAzalt');
+            const miktarArttir = document.getElementById('miktarArttir');
+            const miktarSifirla = document.getElementById('miktarSifirla');
+
+            const formKartBaslik = document.getElementById('formKartBaslik');
+            const sayfaBaslikMetni = document.getElementById('sayfaBaslikMetni');
+            const sayfaAltMetni = document.getElementById('sayfaAltMetni');
+            const turRozet = document.getElementById('turRozet');
+            const kaydetBtn = document.getElementById('kaydetBtn');
+            const breadcrumbBaslik = document.getElementById('breadcrumbBaslik');
+            const seciliDepoBilgiBand = document.getElementById('seciliDepoBilgiBand');
+            const seciliDepoBilgiMetni = document.getElementById('seciliDepoBilgiMetni');
+
+            const urunSecilmediBilgi = document.getElementById('urunSecilmediBilgi');
+            const urunStokDetay = document.getElementById('urunStokDetay');
+            const ozetUrunKodu = document.getElementById('ozetUrunKodu');
+            const ozetUrunAdi = document.getElementById('ozetUrunAdi');
+            const ozetKategori = document.getElementById('ozetKategori');
+            const ozetKritikRozet = document.getElementById('ozetKritikRozet');
+            const ozetMevcutStok = document.getElementById('ozetMevcutStok');
+            const ozetKritikSeviye = document.getElementById('ozetKritikSeviye');
+            const ozetSonrakiStok = document.getElementById('ozetSonrakiStok');
+            const ozetDepoStok = document.getElementById('ozetDepoStok');
+            const canliUyariKutusu = document.getElementById('canliUyariKutusu');
+
+            function gorunumuGuncelle() {
+                const cikis = turCikis && turCikis.checked;
+                const miktar = Math.max(0, parseInt(miktarGirdi.value || '0', 10) || 0);
+
+                // Kart başlığı ve buton teması
+                formKartBaslik.className = 'card-header py-3 ' + (cikis ? 'bg-danger text-white' : 'bg-success text-white');
+                sayfaBaslikMetni.textContent = cikis
+                    ? 'Stok Çıkışı / Satış (-)'
+                    : 'Stok Girişi (+)';
+                sayfaAltMetni.textContent = cikis
+                    ? 'Satış, sevkiyat veya kullanım nedeniyle seçilen depodan düşülecek miktarı girin.'
+                    : 'Tedarik, iade veya sayım fazlası olarak seçilen depoya giren miktarı girin.';
+                turRozet.className = 'badge bg-white fs-6 px-3 py-2 ' + (cikis ? 'text-danger' : 'text-success');
+                turRozet.textContent = cikis ? '- ÇIKIŞ' : '+ GİRİŞ';
+                kaydetBtn.className = 'btn fw-semibold flex-grow-1 py-2 ' + (cikis ? 'btn-danger' : 'btn-success');
+                kaydetBtn.textContent = cikis ? 'Depodan Stok Çıkışı Yap' : 'Depoya Stok Girişi Yap';
+                if (miktarEtiket) {
+                    miktarEtiket.textContent = cikis ? 'Depodan Çıkarılacak Miktar *' : 'Depoya Eklenecek Miktar *';
+                }
+                if (breadcrumbBaslik) {
+                    breadcrumbBaslik.textContent = cikis ? 'Stok Çıkışı / Satış' : 'Stok Girişi Yap';
+                }
+
+                const seciliUrun = urunMap.get(String(urunSecimi.value));
+                const seciliDepoId = String(depoSecimi.value || '');
+
+                if (!seciliUrun) {
+                    urunSecilmediBilgi.classList.remove('d-none');
+                    urunStokDetay.classList.add('d-none');
+                    seciliDepoBilgiBand.classList.add('d-none');
+                    return;
+                }
+
+                urunSecilmediBilgi.classList.add('d-none');
+                urunStokDetay.classList.remove('d-none');
+
+                let depoMiktar = 0;
+                if (seciliDepoId && seciliUrun.depoStoklari && Object.prototype.hasOwnProperty.call(seciliUrun.depoStoklari, seciliDepoId)) {
+                    depoMiktar = seciliUrun.depoStoklari[seciliDepoId];
+                }
+
+                if (seciliDepoId) {
+                    seciliDepoBilgiBand.className = 'p-2 px-3 rounded-3 mb-3 border ' + (cikis ? 'bg-danger-subtle border-danger-subtle text-danger-emphasis' : 'bg-success-subtle border-success-subtle text-success-emphasis');
+                    seciliDepoBilgiMetni.textContent = 'Seçili depodaki mevcut stok: ' + depoMiktar + ' adet';
+                } else {
+                    seciliDepoBilgiBand.classList.add('d-none');
+                }
+
+                ozetUrunKodu.textContent = 'Barkod: ' + seciliUrun.kod;
+                ozetUrunAdi.textContent = seciliUrun.ad;
+                ozetKategori.textContent = 'Kategori: ' + seciliUrun.kategori;
+                ozetDepoStok.textContent = depoMiktar;
+                ozetMevcutStok.textContent = seciliUrun.mevcutMiktar;
+                ozetKritikSeviye.textContent = seciliUrun.kritikSeviye;
+
+                const mevcutKritik = seciliUrun.mevcutMiktar <= seciliUrun.kritikSeviye;
+                ozetKritikRozet.className = 'badge ' + (mevcutKritik ? 'text-bg-danger' : 'text-bg-success');
+                ozetKritikRozet.textContent = mevcutKritik ? 'Kritik Stok' : 'Stok Yeterli';
+
+                const sonraki = cikis
+                    ? (seciliUrun.mevcutMiktar - miktar)
+                    : (seciliUrun.mevcutMiktar + miktar);
+                ozetSonrakiStok.textContent = sonraki;
+                ozetSonrakiStok.className = 'fs-5 fw-bold ' + (sonraki < 0 ? 'text-danger' : (sonraki <= seciliUrun.kritikSeviye ? 'text-warning' : 'text-success'));
+
+                canliUyariKutusu.classList.add('d-none');
+                if (cikis && seciliDepoId && miktar > depoMiktar) {
+                    canliUyariKutusu.className = 'alert alert-danger py-2 px-3 small mb-0';
+                    canliUyariKutusu.textContent = 'Bu depoda yalnızca ' + depoMiktar + ' adet stok var. ' + miktar + ' adet çıkış yapılamaz.';
+                } else if (sonraki <= seciliUrun.kritikSeviye) {
+                    canliUyariKutusu.className = 'alert alert-warning py-2 px-3 small mb-0';
+                    canliUyariKutusu.textContent = 'Dikkat: İşlem sonrasında ürün kritik stok seviyesinde veya altında kalacak (' + sonraki + ' ≤ ' + seciliUrun.kritikSeviye + ').';
+                }
+            }
+
+            [turGiris, turCikis, urunSecimi, depoSecimi, miktarGirdi].forEach(el => {
+                if (el) {
+                    el.addEventListener('change', gorunumuGuncelle);
+                    el.addEventListener('input', gorunumuGuncelle);
+                }
+            });
+
+            if (miktarAzalt) {
+                miktarAzalt.addEventListener('click', () => {
+                    const mevcut = parseInt(miktarGirdi.value || '1', 10) || 1;
+                    miktarGirdi.value = Math.max(1, mevcut - 1);
+                    gorunumuGuncelle();
+                });
+            }
+            if (miktarArttir) {
+                miktarArttir.addEventListener('click', () => {
+                    const mevcut = parseInt(miktarGirdi.value || '0', 10) || 0;
+                    miktarGirdi.value = Math.min(100000, mevcut + 1);
+                    gorunumuGuncelle();
+                });
+            }
+            if (miktarSifirla) {
+                miktarSifirla.addEventListener('click', () => {
+                    miktarGirdi.value = 1;
+                    gorunumuGuncelle();
+                });
+            }
+            document.querySelectorAll('.hizli-miktar').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const ekle = parseInt(btn.getAttribute('data-ekle') || '0', 10);
+                    const mevcut = parseInt(miktarGirdi.value || '0', 10) || 0;
+                    miktarGirdi.value = Math.min(100000, mevcut + ekle);
+                    gorunumuGuncelle();
+                });
+            });
+
+            gorunumuGuncelle();
+        })();
+    </script>
 }

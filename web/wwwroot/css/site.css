@@ -1,5 +1,6 @@
 html {
   font-size: 14px;
+  scroll-behavior: smooth;
 }
 
 @media (min-width: 768px) {
@@ -8,17 +9,8 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-select:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -28,4 +20,115 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+/* Stok Giriş/Çıkış Tür Seçim Kartları */
+.hareket-tur-secici .tur-kart {
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 2px solid var(--bs-border-color);
+  user-select: none;
+}
+
+.hareket-tur-secici .tur-kart:hover {
+  transform: translateY(-1px);
+}
+
+.hareket-tur-secici input[type="radio"]:checked + .tur-kart-giris {
+  border-color: var(--bs-success);
+  background-color: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text-emphasis);
+  box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.15);
+}
+
+.hareket-tur-secici input[type="radio"]:checked + .tur-kart-cikis {
+  border-color: var(--bs-danger);
+  background-color: var(--bs-danger-bg-subtle);
+  color: var(--bs-danger-text-emphasis);
+  box-shadow: 0 0.25rem 0.5rem rgba(220, 53, 69, 0.15);
+}
+
+/* Yönetici Paneli Yan Menü */
+.yonetim-menu .list-group-item {
+  border: 0;
+  border-radius: 0.5rem;
+  margin-bottom: 0.2rem;
+  font-weight: 500;
+  color: var(--bs-body-color);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.yonetim-menu .list-group-item:hover {
+  background-color: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary-text-emphasis);
+}
+
+.yonetim-menu .list-group-item.active {
+  background-color: var(--bs-primary);
+  color: #fff;
+}
+
+@media (min-width: 992px) {
+  .yonetim-sidebar-sticky {
+    position: sticky;
+    top: 4.5rem;
+  }
+  .border-lg-0 {
+    border-top: 0 !important;
+  }
+  .w-lg-auto {
+    width: auto !important;
+  }
+}
+
+/* Küçük ekranlarda (Mobil) Responsive Tablo & Kart Uyumluluğu */
+@media (max-width: 767.98px) {
+  .sayfa-baslik-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .sayfa-baslik-bar .aksiyon-grup {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .sayfa-baslik-bar .aksiyon-grup > .btn {
+    flex: 1 1 auto;
+  }
+
+  .table-responsive-cards thead {
+    display: none;
+  }
+
+  .table-responsive-cards tbody tr {
+    display: block;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+  }
+
+  .table-responsive-cards tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table-responsive-cards tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+    border: 0;
+    text-align: right !important;
+    gap: 0.75rem;
+  }
+
+  .table-responsive-cards tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+    text-transform: uppercase;
+    text-align: left;
+    flex-shrink: 0;
+  }
 }

@@ -5,7 +5,7 @@
     var yonetici = User.IsInRole("Yonetici");
     var filtreVar = !string.IsNullOrEmpty(Model.Arama) || Model.KategoriId.HasValue || Model.SadeceKritik;
 }
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 sayfa-baslik-bar">
     <div>
         <h2 class="mb-0">Ürünler</h2>
         <small class="text-muted">
@@ -16,33 +16,37 @@
             }
         </small>
     </div>
-    @if (yonetici)
-    {
-        <a asp-page="Ekle" class="btn btn-primary">+ Yeni Ürün</a>
-    }
+    <div class="aksiyon-grup d-flex flex-wrap gap-2">
+        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="btn btn-outline-success">+ Stok Girişi</a>
+        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="btn btn-outline-danger">- Stok Çıkışı</a>
+        @if (yonetici)
+        {
+            <a asp-page="Ekle" class="btn btn-primary">+ Yeni Ürün</a>
+        }
+    </div>
 </div>
 
-<form method="get" class="card card-body shadow-sm mb-3">
+<form method="get" class="card card-body shadow-sm border-0 mb-3">
     <div class="row g-2 align-items-center">
-        <div class="col-md-5">
-            <input type="search" name="arama" value="@Model.Arama" class="form-control" placeholder="Ürün adı veya kodu ile ara..." />
+        <div class="col-12 col-md-5">
+            <input type="search" name="arama" value="@Model.Arama" class="form-control" placeholder="Ürün adı veya barkod kodu ile ara..." />
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <select name="kategoriId" asp-items="Model.KategoriListesi" class="form-select">
                 <option value="">Tüm kategoriler</option>
             </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="sadeceKritik" value="true" id="sadeceKritik" @(Model.SadeceKritik ? "checked" : "") />
                 <label class="form-check-label" for="sadeceKritik">Sadece kritik</label>
             </div>
         </div>
-        <div class="col-md-2 d-flex gap-1">
+        <div class="col-12 col-md-2 d-flex gap-1">
             <button type="submit" class="btn btn-outline-secondary flex-grow-1">Filtrele</button>
             @if (filtreVar)
             {
-                <a asp-page="Index" class="btn btn-link px-2" title="Filtreleri temizle">✕</a>
+                <a asp-page="Index" class="btn btn-link px-2 text-decoration-none" title="Filtreleri temizle">✕</a>
             }
         </div>
     </div>
@@ -56,36 +60,57 @@
 }
 else
 {
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 table-responsive-cards">
                 <thead class="table-light">
                     <tr>
-                        <th>Kod</th>
-                        <th>Ürün Adı</th>
+                        <th>Barkod Kodu</th>
+                        <th>Ürün Adı & Depo Zimmeti</th>
                         <th>Kategori</th>
                         <th class="text-end">Mevcut</th>
                         <th class="text-end">Kritik Seviye</th>
                         <th class="text-center">Durum</th>
-                        @if (yonetici) { <th class="text-end">İşlemler</th> }
+                        <th class="text-end">İşlemler</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var u in Model.Urunler)
                     {
+                        var depolar = Model.UrunDepoDagilimi.TryGetValue(u.Id, out var liste) ? liste : null;
+                        var varsayilanDepoId = depolar?.FirstOrDefault()?.DepoId;
                         <tr class="@(u.KritikMi ? "table-danger" : "")">
-                            <td><code>@u.UrunKodu</code></td>
-                            <td>
-                                <div class="fw-semibold">@u.Ad</div>
-                                @if (!string.IsNullOrWhiteSpace(u.Aciklama))
-                                {
-                                    <small class="text-muted">@u.Aciklama</small>
-                                }
+                            <td data-label="Barkod Kodu">
+                                <a asp-page="Detay" asp-route-id="@u.Id" class="text-decoration-none">
+                                    <code>@u.UrunKodu</code>
+                                </a>
                             </td>
-                            <td>@u.Kategori?.Ad</td>
-                            <td class="text-end fw-semibold">@u.MevcutMiktar</td>
-                            <td class="text-end text-muted">@u.KritikStokSeviyesi</td>
-                            <td class="text-center">
+                            <td data-label="Ürün Adı">
+                                <div>
+                                    <a asp-page="Detay" asp-route-id="@u.Id" class="fw-semibold text-dark text-decoration-none">
+                                        @u.Ad
+                                    </a>
+                                    @if (!string.IsNullOrWhiteSpace(u.Aciklama))
+                                    {
+                                        <div class="small text-muted">@u.Aciklama</div>
+                                    }
+                                    @if (depolar != null && depolar.Count > 0)
+                                    {
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                            @foreach (var d in depolar)
+                                            {
+                                                <span class="badge bg-light text-dark border fw-normal">
+                                                    @d.DepoAdi: <strong>@d.Miktar</strong>
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                            <td data-label="Kategori">@u.Kategori?.Ad</td>
+                            <td data-label="Mevcut" class="text-end fw-semibold">@u.MevcutMiktar</td>
+                            <td data-label="Kritik Seviye" class="text-end text-muted">@u.KritikStokSeviyesi</td>
+                            <td data-label="Durum" class="text-center">
                                 @if (u.KritikMi)
                                 {
                                     <span class="badge text-bg-danger">Kritik</span>
@@ -95,13 +120,18 @@ else
                                     <span class="badge text-bg-success">Yeterli</span>
                                 }
                             </td>
-                            @if (yonetici)
-                            {
-                                <td class="text-end text-nowrap">
+                            <td data-label="İşlemler" class="text-end text-nowrap">
+                                <a asp-page="Detay" asp-route-id="@u.Id" class="btn btn-sm btn-outline-secondary">Detay</a>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@u.Id" asp-route-depoId="@varsayilanDepoId"
+                                   class="btn btn-sm btn-outline-success" title="Stok Girişi Yap">+</a>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-urunId="@u.Id" asp-route-depoId="@varsayilanDepoId"
+                                   class="btn btn-sm btn-outline-danger" title="Stok Çıkışı Yap">-</a>
+                                @if (yonetici)
+                                {
                                     <a asp-page="Duzenle" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">Düzenle</a>
                                     <a asp-page="Sil" asp-route-id="@u.Id" class="btn btn-sm btn-outline-danger">Sil</a>
-                                </td>
-                            }
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>

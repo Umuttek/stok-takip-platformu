@@ -1,38 +1,143 @@
 @model StokTakip.Models.Urun
 @using Microsoft.AspNetCore.Mvc.Rendering
-@* Sayfadan <partial name="_UrunForm" for="Urun" /> ile çağrılır. Kategori listesi ViewData["KategoriListesi"] ile gelir. *@
-<div class="row g-3">
-    <div class="col-md-4">
-        <label asp-for="UrunKodu" class="form-label"></label> <span class="text-danger">*</span>
-        <input asp-for="UrunKodu" class="form-control text-uppercase" placeholder="ör. URN-001" autofocus />
-        <span asp-validation-for="UrunKodu" class="text-danger small"></span>
+@{
+    var duzenlemeModu = ViewData["DuzenlemeModu"] as bool? ?? false;
+    var barkodKodu = ViewData["AtanacakBarkod"] as string ?? Model.UrunKodu;
+    var mevcutFotografBase64 = ViewData["MevcutFotografBase64"] as string;
+    var kategoriListesi = (IEnumerable<SelectListItem>?)ViewData["KategoriListesi"] ?? Enumerable.Empty<SelectListItem>();
+    var depoListesi = (IEnumerable<SelectListItem>?)ViewData["DepoListesi"] ?? Enumerable.Empty<SelectListItem>();
+}
+
+<!-- 1. Otomatik Barkod / Ürün Kodu Bilgi Kartı (EAN-13) -->
+<div class="card border bg-body-tertiary shadow-none mb-3">
+    <div class="card-body py-3 px-3 d-flex align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold"
+                 style="width: 46px; height: 46px; font-size: 1.15rem;">
+                |||
+            </div>
+            <div>
+                <div class="text-muted small fw-semibold">
+                    @(duzenlemeModu ? "Ürün Barkod Kodu" : "Otomatik Atanacak Barkod Kodu")
+                </div>
+                <div class="fs-5 fw-bold font-monospace text-dark" style="letter-spacing: 1.2px;" id="barkodOnizlemeMetni">
+                    @(string.IsNullOrWhiteSpace(barkodKodu) ? "Otomatik üretilecek" : barkodKodu)
+                </div>
+            </div>
+        </div>
+        <span class="badge rounded-pill text-bg-info px-3 py-2 fw-bold">EAN-13</span>
     </div>
-    <div class="col-md-8">
-        <label asp-for="Ad" class="form-label"></label> <span class="text-danger">*</span>
-        <input asp-for="Ad" class="form-control" />
+</div>
+<input type="hidden" asp-for="UrunKodu" value="@barkodKodu" />
+
+<!-- 2. İsteğe Bağlı Ürün Fotoğrafı Alanı -->
+<div class="card border shadow-none mb-3 overflow-hidden">
+    <div id="fotografOnizlemeKutusu" class="@(string.IsNullOrWhiteSpace(mevcutFotografBase64) ? "d-none" : "") position-relative bg-dark text-center">
+        <img id="fotografOnizlemeImg"
+             src="@(string.IsNullOrWhiteSpace(mevcutFotografBase64) ? "" : $"data:image/jpeg;base64,{mevcutFotografBase64}")"
+             alt="Ürün Fotoğrafı"
+             style="max-height: 210px; width: 100%; object-fit: cover;" />
+        <div class="position-absolute top-0 end-0 m-2 d-flex gap-1">
+            <label for="fotografDosyaGirdi" class="btn btn-sm btn-light fw-semibold shadow-sm mb-0" style="cursor: pointer;">
+                Değiştir
+            </label>
+            <button type="button" id="fotografKaldirBtn" class="btn btn-sm btn-danger fw-semibold shadow-sm">
+                Kaldır
+            </button>
+        </div>
+    </div>
+
+    <label for="fotografDosyaGirdi" id="fotografSeciciAlan"
+           class="@(!string.IsNullOrWhiteSpace(mevcutFotografBase64) ? "d-none" : "") card-body text-center py-4 mb-0"
+           style="cursor: pointer;">
+        <div class="text-primary fs-3 mb-1">📷</div>
+        <div class="fw-bold">Ürün Fotoğrafı Ekle (İsteğe Bağlı)</div>
+        <div class="text-muted small">Bilgisayarınızdan veya kameradan fotoğraf yükleyebilirsiniz</div>
+    </label>
+    <input type="file" id="fotografDosyaGirdi" accept="image/*" class="d-none" />
+    <input type="hidden" name="FotografBase64" id="FotografBase64" />
+    <input type="hidden" name="FotografiKaldir" id="FotografiKaldir" value="false" />
+</div>
+
+<!-- 3. Temel Ürün Bilgileri -->
+<div class="row g-3">
+    <div class="col-12">
+        <label asp-for="Ad" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+        <input asp-for="Ad" class="form-control" placeholder="Örn: Kablosuz Barkod Okuyucu" autofocus />
         <span asp-validation-for="Ad" class="text-danger small"></span>
     </div>
-    <div class="col-12">
-        <label asp-for="KategoriId" class="form-label"></label> <span class="text-danger">*</span>
-        <select asp-for="KategoriId" asp-items="@((IEnumerable<SelectListItem>?)ViewData["KategoriListesi"] ?? Enumerable.Empty<SelectListItem>())" class="form-select">
-            <option value="0">-- Kategori seçin --</option>
-        </select>
+
+    <div class="col-md-7">
+        <label asp-for="KategoriId" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
+        <div class="input-group">
+            <select asp-for="KategoriId" asp-items="kategoriListesi" class="form-select" id="kategoriSelect">
+                <option value="0">-- Kategori seçin --</option>
+            </select>
+            <button type="button" class="btn btn-outline-primary fw-bold" data-bs-toggle="modal" data-bs-target="#hizliKategoriModal" title="Yeni Kategori Ekle">
+                + Yeni
+            </button>
+        </div>
         <span asp-validation-for="KategoriId" class="text-danger small"></span>
     </div>
-    <div class="col-md-6">
-        <label asp-for="MevcutMiktar" class="form-label"></label>
-        <input asp-for="MevcutMiktar" type="number" min="0" class="form-control" />
-        <span asp-validation-for="MevcutMiktar" class="text-danger small"></span>
-    </div>
-    <div class="col-md-6">
-        <label asp-for="KritikStokSeviyesi" class="form-label"></label>
+
+    <div class="col-md-5">
+        <label asp-for="KritikStokSeviyesi" class="form-label fw-semibold"></label> <span class="text-danger">*</span>
         <input asp-for="KritikStokSeviyesi" type="number" min="0" class="form-control" />
-        <div class="form-text">Mevcut miktar bu değere eşit veya altına düşünce ürün "kritik" sayılır.</div>
+        <div class="form-text small">Stok bu miktara veya altına düştüğünde kritik uyarı verir.</div>
         <span asp-validation-for="KritikStokSeviyesi" class="text-danger small"></span>
     </div>
+
+    @if (!duzenlemeModu)
+    {
+        <!-- 4. Depo Zimmet ve Başlangıç Stoğu (Yeni Ürün Eklerken) -->
+        <div class="col-12 pt-2">
+            <div class="p-3 rounded-3 bg-primary-subtle border border-primary-subtle">
+                <h6 class="fw-bold text-primary-emphasis mb-2">Depo Zimmet ve Başlangıç Stoğu</h6>
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label for="DepoId" class="form-label fw-semibold small mb-1">Zimmetlenecek Depo <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select name="DepoId" id="depoSelect" asp-items="depoListesi" class="form-select">
+                                <option value="0">-- Depo seçin --</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary fw-bold" data-bs-toggle="modal" data-bs-target="#hizliDepoModal" title="Yeni Depo Ekle">
+                                + Yeni
+                            </button>
+                        </div>
+                        @if (ViewData.ModelState["DepoId"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger small">@ViewData.ModelState["DepoId"]!.Errors[0].ErrorMessage</span>
+                        }
+                    </div>
+                    <div class="col-md-5">
+                        <label asp-for="MevcutMiktar" class="form-label fw-semibold small mb-1">Eklenecek Stok Miktarı (Adet) <span class="text-danger">*</span></label>
+                        <input asp-for="MevcutMiktar" type="number" min="0" class="form-control" />
+                        <div class="form-text small">Girilen miktar doğrudan seçilen depoya zimmetlenir.</div>
+                        <span asp-validation-for="MevcutMiktar" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" asp-for="MevcutMiktar" />
+        <div class="col-12">
+            <div class="alert alert-info py-2 px-3 small mb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>
+                    Mevcut Toplam Stok: <strong>@Model.MevcutMiktar adet</strong>. Depo stok bakiyelerinin tutarlılığı için adet değişiklikleri Stok Giriş/Çıkış ekranından yapılır.
+                </span>
+                <div class="d-flex gap-1">
+                    <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@Model.Id" class="btn btn-sm btn-success">+ Stok Girişi</a>
+                    <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-urunId="@Model.Id" class="btn btn-sm btn-danger">- Stok Çıkışı</a>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="col-12">
-        <label asp-for="Aciklama" class="form-label"></label>
-        <textarea asp-for="Aciklama" class="form-control" rows="3"></textarea>
+        <label asp-for="Aciklama" class="form-label fw-semibold"></label>
+        <textarea asp-for="Aciklama" class="form-control" rows="3" placeholder="Ürün hakkında ek açıklama veya teknik detaylar..."></textarea>
         <span asp-validation-for="Aciklama" class="text-danger small"></span>
     </div>
 </div>

@@ -9,39 +9,76 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/StokTakip.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+@{
+    var aktifYol = Context.Request.Path.Value ?? "/";
+    bool AktifMi(string yol, bool tamEslesme = false) =>
+        tamEslesme
+            ? string.Equals(aktifYol, yol, StringComparison.OrdinalIgnoreCase)
+            : aktifYol.StartsWith(yol, StringComparison.OrdinalIgnoreCase);
+}
+<body class="d-flex flex-column min-vh-100 bg-body-tertiary">
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">StokTakip</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" asp-area="" asp-page="/Index">
+                    <span class="brand-badge bg-primary text-white rounded-2 d-inline-flex align-items-center justify-content-center">ST</span>
+                    <span>StokTakip</span>
+                </a>
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#anaMenu"
+                        aria-controls="anaMenu" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="anaMenu">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Ana Sayfa</a>
+                            <a class="nav-link @(AktifMi("/", true) || AktifMi("/Index", true) ? "active fw-semibold text-primary" : "text-dark")"
+                               asp-area="" asp-page="/Index">Ana Sayfa</a>
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Urunler/Index">Ürünler</a>
+                                <a class="nav-link @(AktifMi("/Urunler") ? "active fw-semibold text-primary" : "text-dark")"
+                                   asp-page="/Urunler/Index">Ürünler</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Kategoriler/Index">Kategoriler</a>
+                                <a class="nav-link @(AktifMi("/Kategoriler") ? "active fw-semibold text-primary" : "text-dark")"
+                                   asp-page="/Kategoriler/Index">Kategoriler</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Depolar/Index">Depolar</a>
+                                <a class="nav-link @(AktifMi("/Depolar") ? "active fw-semibold text-primary" : "text-dark")"
+                                   asp-page="/Depolar/Index">Depolar</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" href="/StokHareketleri">Stok Hareketleri</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(AktifMi("/StokHareketleri") ? "active fw-semibold text-primary" : "text-dark")"
+                                   href="/StokHareketleri" id="stokHareketMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Stok Hareketleri
+                                </a>
+                                <ul class="dropdown-menu shadow-sm border-0" aria-labelledby="stokHareketMenu">
+                                    <li>
+                                        <a class="dropdown-item" asp-page="/StokHareketleri/Index">Tüm Stok Hareketleri</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <a class="dropdown-item text-success fw-semibold" asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris">
+                                            + Stok Girişi Yap
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger fw-semibold" asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis">
+                                            - Stok Çıkışı Yap
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
-                        } 
+                        }
                         @if (User.IsInRole("Yonetici"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" href="/Yonetim">Yönetim Paneli</a>
+                                <a class="nav-link @(AktifMi("/Yonetim") ? "active fw-semibold text-primary" : "text-dark") d-inline-flex align-items-center gap-1"
+                                   asp-page="/Yonetim/Index">
+                                    <span>Yönetim Paneli</span>
+                                    <span class="badge rounded-pill text-bg-primary">Yönetici</span>
+                                </a>
                             </li>
                         }
                     </ul>
@@ -50,18 +87,33 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <div class="container flex-grow-1 py-3 py-md-4">
+        <main role="main">
             @if (TempData["Basari"] is string basari)
             {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                     @basari
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
+            @if (TempData["Mesaj"] is string mesaj && TempData["Basari"] == null)
+            {
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    @mesaj
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
+            @if (TempData["Uyari"] is string uyari)
+            {
+                <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+                    @uyari
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
                 </div>
             }
             @if (TempData["Hata"] is string hata)
             {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                     @hata
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
                 </div>
@@ -70,9 +122,17 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - StokTakip - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <footer class="border-top bg-white text-muted py-3 mt-auto">
+        <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 small">
+            <div>&copy; 2026 - <strong>StokTakip</strong> Merkezi Stok ve Depo Yönetim Sistemi</div>
+            <div class="d-flex gap-3">
+                <a asp-area="" asp-page="/Index" class="text-decoration-none text-muted">Ana Sayfa</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-page="/StokHareketleri/Index" class="text-decoration-none text-muted">Stok Hareketleri</a>
+                }
+                <a asp-area="" asp-page="/Privacy" class="text-decoration-none text-muted">Gizlilik</a>
+            </div>
         </div>
     </footer>
 

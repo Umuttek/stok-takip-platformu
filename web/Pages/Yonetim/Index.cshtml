@@ -3,44 +3,663 @@
 @{
     ViewData["Title"] = "Yönetim Paneli";
 }
-<h2 class="mb-1">Yönetim Paneli</h2>
-<p class="text-muted mb-4">Bu sayfayı yalnızca Yöneticiler görebilir. Kategori, ürün ve depo işlemlerini buradan yönetebilirsiniz.</p>
 
-<div class="row g-3">
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Ürün Yönetimi</h5>
-                <p class="card-text text-muted small">Yeni ürün ekleyin, mevcut ürünleri güncelleyin veya silin.</p>
-                <div class="d-flex gap-2">
-                    <a asp-page="/Urunler/Index" class="btn btn-sm btn-outline-primary">Listele</a>
-                    <a asp-page="/Urunler/Ekle" class="btn btn-sm btn-primary">+ Ürün Ekle</a>
-                </div>
+<!-- Üst Başlık ve Hızlı İşlem Barı -->
+<div class="p-3 p-md-4 mb-4 rounded-3 bg-dark bg-gradient text-white shadow-sm">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge text-bg-primary">YÖNETİCİ PANELİ</span>
+                <span class="small text-white-50">Merkezi Kontrol ve Özet Ekranı</span>
             </div>
+            <h1 class="h3 fw-bold mb-1">Yönetim ve Sistem Özeti</h1>
+            <p class="mb-0 text-white-50 small">
+                Ürün, kategori, depo zimmetleri, stok giriş/çıkış hareketleri ve kullanıcı yetkilerini tek ekrandan yönetin.
+            </p>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Kategori Yönetimi</h5>
-                <p class="card-text text-muted small">Ürün kategorilerini oluşturun, düzenleyin veya silin.</p>
-                <div class="d-flex gap-2">
-                    <a asp-page="/Kategoriler/Index" class="btn btn-sm btn-outline-primary">Listele</a>
-                    <a asp-page="/Kategoriler/Ekle" class="btn btn-sm btn-primary">+ Kategori Ekle</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Depo Yönetimi</h5>
-                <p class="card-text text-muted small">Depo kayıtlarını ve konum bilgilerini yönetin.</p>
-                <div class="d-flex gap-2">
-                    <a asp-page="/Depolar/Index" class="btn btn-sm btn-outline-primary">Listele</a>
-                    <a asp-page="/Depolar/Ekle" class="btn btn-sm btn-primary">+ Depo Ekle</a>
-                </div>
-            </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="btn btn-sm btn-success fw-semibold">
+                + Stok Girişi
+            </a>
+            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="btn btn-sm btn-danger fw-semibold">
+                - Stok Çıkışı
+            </a>
+            <a asp-page="/Urunler/Ekle" class="btn btn-sm btn-primary fw-semibold">
+                + Yeni Ürün
+            </a>
+            <a asp-page="/Depolar/Ekle" class="btn btn-sm btn-outline-light">
+                + Yeni Depo
+            </a>
+            <a asp-page="/Kategoriler/Ekle" class="btn btn-sm btn-outline-light">
+                + Yeni Kategori
+            </a>
         </div>
     </div>
 </div>
+
+<div class="row g-4">
+    <!-- Sol Sütun: Yönetici Paneli Menüsü -->
+    <div class="col-lg-3">
+        <div class="yonetim-sidebar-sticky">
+            <!-- Panel İçi Bölüm Menüsü -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-white fw-bold py-3">
+                    Panel Menüsü
+                </div>
+                <div class="card-body p-2 yonetim-menu">
+                    <div class="list-group list-group-flush">
+                        <a href="#genel-ozet" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Genel Özet</span>
+                            <span class="badge rounded-pill text-bg-light border">KPI</span>
+                        </a>
+                        <a href="#hizli-moduller" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Yönetim Modülleri</span>
+                            <span class="badge rounded-pill text-bg-secondary">4</span>
+                        </a>
+                        <a href="#kritik-stoklar" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Kritik Stok Uyarıları</span>
+                            <span class="badge rounded-pill @(Model.KritikUrunSayisi > 0 ? "text-bg-danger" : "text-bg-success")">
+                                @Model.KritikUrunSayisi
+                            </span>
+                        </a>
+                        <a href="#son-hareketler" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Son Stok Hareketleri</span>
+                            <span class="badge rounded-pill text-bg-primary">@Model.ToplamHareketSayisi</span>
+                        </a>
+                        <a href="#depo-kategori-ozet" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Depo & Kategori Dağılımı</span>
+                            <span class="badge rounded-pill text-bg-info">@Model.DepoSayisi / @Model.KategoriSayisi</span>
+                        </a>
+                        <a href="#kullanici-yonetimi" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Kullanıcı & Yetki Yönetimi</span>
+                            <span class="badge rounded-pill text-bg-dark">@Model.ToplamKullaniciSayisi</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sayfalar Arası Hızlı Geçiş Menüsü -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold py-3">
+                    Modül Sayfaları
+                </div>
+                <div class="card-body p-2 yonetim-menu">
+                    <div class="list-group list-group-flush">
+                        <a asp-page="/Urunler/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Ürünler & Düzenleme</span>
+                            <span class="text-muted small">→</span>
+                        </a>
+                        <a asp-page="/Urunler/Ekle" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>+ Ürün Ekle & Zimmetle</span>
+                            <span class="text-muted small">→</span>
+                        </a>
+                        <a asp-page="/Kategoriler/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Kategori Yönetimi</span>
+                            <span class="text-muted small">→</span>
+                        </a>
+                        <a asp-page="/Depolar/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Depolar & Zimmetli Stoklar</span>
+                            <span class="text-muted small">→</span>
+                        </a>
+                        <a asp-page="/StokHareketleri/Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>Stok Hareket Kayıtları</span>
+                            <span class="text-muted small">→</span>
+                        </a>
+                        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="list-group-item list-group-item-action text-success fw-semibold">
+                            + Stok Girişi Formu
+                        </a>
+                        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="list-group-item list-group-item-action text-danger fw-semibold">
+                            - Stok Çıkışı / Satış Formu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ Sütun: Yönetici Paneli İçeriği (Özet Ekranı) -->
+    <div class="col-lg-9">
+        <!-- 1. GENEL ÖZET İSTATİSTİKLERİ (KPI KARTLARI) -->
+        <section id="genel-ozet" class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="h5 fw-bold mb-0">Genel Sistem Özeti</h4>
+                <span class="small text-muted">Son 7 günde @Model.Son7GunHareketSayisi stok hareketi</span>
+            </div>
+            <div class="row g-3">
+                <div class="col-6 col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">Ürün Çeşidi</div>
+                            <div class="fs-2 fw-bold text-primary my-1">@Model.UrunCesidiSayisi</div>
+                            <div class="small text-muted">@Model.KategoriSayisi farklı kategoride</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">Stoktaki Ürün</div>
+                            <div class="fs-2 fw-bold text-success my-1">@Model.ToplamStokAdedi</div>
+                            <div class="small text-muted">@Model.DepoSayisi aktif depoda</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card shadow-sm border-0 border-start @(Model.KritikUrunSayisi > 0 ? "border-danger" : "border-secondary") border-4 h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">Kritik Stoktaki Ürün</div>
+                            <div class="fs-2 fw-bold @(Model.KritikUrunSayisi > 0 ? "text-danger" : "text-secondary") my-1">
+                                @Model.KritikUrunSayisi
+                            </div>
+                            <div class="small text-muted">
+                                @(Model.KritikUrunSayisi > 0 ? "Acil tedarik gerektiren ürün" : "Tüm stok seviyeleri yeterli")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-info border-4 h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">Stok Girişleri</div>
+                            <div class="fs-3 fw-bold text-success my-1">+@Model.ToplamGirenBirim</div>
+                            <div class="small text-muted">@Model.GirisHareketSayisi giriş işleminde</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">Stok Çıkışları</div>
+                            <div class="fs-3 fw-bold text-danger my-1">-@Model.ToplamCikanBirim</div>
+                            <div class="small text-muted">@Model.CikisHareketSayisi çıkış işleminde</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="card shadow-sm border-0 border-start border-dark border-4 h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">Kullanıcılar</div>
+                            <div class="fs-3 fw-bold text-dark my-1">@Model.ToplamKullaniciSayisi</div>
+                            <div class="small text-muted">@Model.YoneticiSayisi yönetici · @Model.CalisanSayisi çalışan</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. HIZLI YÖNETİM MODÜLLERİ -->
+        <section id="hizli-moduller" class="mb-4">
+            <h4 class="h5 fw-bold mb-2">Yönetim Modülleri</h4>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h5 class="card-title mb-0 fw-bold">Ürünler & Düzenleme</h5>
+                                    <span class="badge text-bg-primary">@Model.UrunCesidiSayisi ürün</span>
+                                </div>
+                                <p class="card-text text-muted small mb-3">
+                                    Otomatik EAN-13 barkodlu yeni ürün oluşturun, depoya zimmetleyin, fotoğraf ve detaylarını düzenleyin.
+                                </p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-page="/Urunler/Index" class="btn btn-sm btn-outline-primary">Ürünleri Listele</a>
+                                <a asp-page="/Urunler/Ekle" class="btn btn-sm btn-primary">+ Ürün Ekle</a>
+                                @if (Model.KritikUrunSayisi > 0)
+                                {
+                                    <a asp-page="/Urunler/Index" asp-route-sadeceKritik="true" class="btn btn-sm btn-outline-danger">
+                                        Kritikler (@Model.KritikUrunSayisi)
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h5 class="card-title mb-0 fw-bold">Stok Giriş / Çıkış</h5>
+                                    <span class="badge text-bg-secondary">@Model.ToplamHareketSayisi hareket</span>
+                                </div>
+                                <p class="card-text text-muted small mb-3">
+                                    Depolar üzerinden stok giriş-çıkış ve satış işlemlerini anlık depo bakiye kontrolüyle kaydedin.
+                                </p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-page="/StokHareketleri/Index" class="btn btn-sm btn-outline-secondary">Hareketler</a>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="btn btn-sm btn-success">+ Stok Girişi</a>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="btn btn-sm btn-danger">- Stok Çıkışı</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h5 class="card-title mb-0 fw-bold">Depolar & Zimmetler</h5>
+                                    <span class="badge text-bg-dark">@Model.DepoSayisi depo</span>
+                                </div>
+                                <p class="card-text text-muted small mb-3">
+                                    Depoları, konumlarını ve her bir depoda zimmetli bulunan ürün çeşitlerini ve adetlerini yönetin.
+                                </p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-page="/Depolar/Index" class="btn btn-sm btn-outline-primary">Depoları Listele</a>
+                                <a asp-page="/Depolar/Ekle" class="btn btn-sm btn-primary">+ Depo Ekle</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h5 class="card-title mb-0 fw-bold">Kategori Yönetimi</h5>
+                                    <span class="badge text-bg-info">@Model.KategoriSayisi kategori</span>
+                                </div>
+                                <p class="card-text text-muted small mb-3">
+                                    Ürün gruplarını ve kategori açıklamalarını oluşturun, düzenleyin veya silin.
+                                </p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-page="/Kategoriler/Index" class="btn btn-sm btn-outline-primary">Kategorileri Listele</a>
+                                <a asp-page="/Kategoriler/Ekle" class="btn btn-sm btn-primary">+ Kategori Ekle</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. KRİTİK STOK UYARILARI -->
+        <section id="kritik-stoklar" class="mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                    <div>
+                        <h5 class="mb-0 fw-bold @(Model.KritikUrunSayisi > 0 ? "text-danger" : "")">
+                            Kritik Stok Uyarıları
+                        </h5>
+                        <small class="text-muted">Mevcut miktarı kritik stok seviyesine eşit veya altında olan ürünler</small>
+                    </div>
+                    <a asp-page="/Urunler/Index" asp-route-sadeceKritik="true" class="btn btn-sm btn-outline-danger">
+                        Tüm Kritik Ürünler (@Model.KritikUrunSayisi)
+                    </a>
+                </div>
+                @if (Model.KritikUrunler.Count == 0)
+                {
+                    <div class="card-body text-center py-4 text-success fw-medium">
+                        Kritik stok seviyesinde ürün bulunmuyor. Tüm ürünlerin stoğu güvenli seviyede.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 table-responsive-cards">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Barkod Kodu</th>
+                                    <th>Ürün Adı</th>
+                                    <th>Kategori</th>
+                                    <th class="text-end">Mevcut</th>
+                                    <th class="text-end">Kritik Seviye</th>
+                                    <th class="text-end">Hızlı Aksiyon</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var u in Model.KritikUrunler)
+                                {
+                                    <tr>
+                                        <td data-label="Barkod Kodu">
+                                            <a asp-page="/Urunler/Detay" asp-route-id="@u.Id" class="text-decoration-none">
+                                                <code>@u.UrunKodu</code>
+                                            </a>
+                                        </td>
+                                        <td data-label="Ürün Adı">
+                                            <a asp-page="/Urunler/Detay" asp-route-id="@u.Id" class="fw-semibold text-dark text-decoration-none">
+                                                @u.Ad
+                                            </a>
+                                        </td>
+                                        <td data-label="Kategori">@(u.Kategori?.Ad ?? "-")</td>
+                                        <td data-label="Mevcut" class="text-end text-danger fw-bold">@u.MevcutMiktar</td>
+                                        <td data-label="Kritik Seviye" class="text-end text-muted">@u.KritikStokSeviyesi</td>
+                                        <td data-label="Hızlı Aksiyon" class="text-end text-nowrap">
+                                            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@u.Id"
+                                               class="btn btn-sm btn-success">+ Stok Ekle</a>
+                                            <a asp-page="/Urunler/Detay" asp-route-id="@u.Id"
+                                               class="btn btn-sm btn-outline-secondary">Detay</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- 4. SON STOK HAREKETLERİ -->
+        <section id="son-hareketler" class="mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                    <div>
+                        <h5 class="mb-0 fw-bold">Son Stok Hareketleri</h5>
+                        <small class="text-muted">Sistemde gerçekleştirilen en son giriş ve çıkış işlemleri</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="btn btn-sm btn-outline-success">+ Giriş</a>
+                        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="btn btn-sm btn-outline-danger">- Çıkış</a>
+                        <a asp-page="/StokHareketleri/Index" class="btn btn-sm btn-outline-secondary">Tümünü Gör</a>
+                    </div>
+                </div>
+                @if (Model.SonHareketler.Count == 0)
+                {
+                    <div class="card-body text-center py-4 text-muted">
+                        Henüz stok hareketi kaydedilmemiş.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 table-responsive-cards">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>Ürün</th>
+                                    <th>Depo</th>
+                                    <th class="text-center">Tür</th>
+                                    <th class="text-end">Miktar</th>
+                                    <th>Personel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var h in Model.SonHareketler)
+                                {
+                                    var giris = h.HareketTuru == "Giris";
+                                    var personel = !string.IsNullOrWhiteSpace(h.Kullanici?.AdSoyad)
+                                        ? h.Kullanici.AdSoyad
+                                        : (h.Kullanici?.Email ?? "-");
+                                    <tr>
+                                        <td data-label="Tarih" class="small text-muted text-nowrap">
+                                            @h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                        </td>
+                                        <td data-label="Ürün">
+                                            @if (h.Urun != null)
+                                            {
+                                                <code class="me-1">@h.Urun.UrunKodu</code>
+                                                <a asp-page="/Urunler/Detay" asp-route-id="@h.UrunId" class="fw-semibold text-dark text-decoration-none">
+                                                    @h.Urun.Ad
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span>-</span>
+                                            }
+                                        </td>
+                                        <td data-label="Depo">@(h.Depo?.Ad ?? "-")</td>
+                                        <td data-label="Tür" class="text-center">
+                                            <span class="badge @(giris ? "text-bg-success" : "text-bg-danger")">
+                                                @(giris ? "+ Giriş" : "- Çıkış")
+                                            </span>
+                                        </td>
+                                        <td data-label="Miktar" class="text-end fw-bold @(giris ? "text-success" : "text-danger")">
+                                            @(giris ? "+" : "-")@h.Miktar
+                                        </td>
+                                        <td data-label="Personel" class="small">@personel</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- 5. DEPO VE KATEGORİ DAĞILIMI ÖZETİ -->
+        <section id="depo-kategori-ozet" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <span class="fw-bold">Depo Zimmet Özeti</span>
+                            <a asp-page="/Depolar/Index" class="small text-decoration-none">Depolar →</a>
+                        </div>
+                        @if (Model.DepoOzetleri.Count == 0)
+                        {
+                            <div class="card-body text-muted small text-center py-4">Henüz depo eklenmemiş.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Depo</th>
+                                            <th class="text-center">Ürün Çeşidi</th>
+                                            <th class="text-end">Zimmetli Adet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var d in Model.DepoOzetleri)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <a asp-page="/Depolar/Index" class="fw-semibold text-decoration-none">
+                                                        @d.Ad
+                                                    </a>
+                                                    @if (!string.IsNullOrWhiteSpace(d.Konum))
+                                                    {
+                                                        <div class="small text-muted">@d.Konum</div>
+                                                    }
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge rounded-pill text-bg-primary">@d.UrunCesidi çeşit</span>
+                                                </td>
+                                                <td class="text-end fw-bold text-success">
+                                                    @d.ZimmetliAdet adet
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <span class="fw-bold">Kategori Bazlı Stok Dağılımı</span>
+                            <a asp-page="/Kategoriler/Index" class="small text-decoration-none">Kategoriler →</a>
+                        </div>
+                        @if (Model.KategoriOzetleri.Count == 0)
+                        {
+                            <div class="card-body text-muted small text-center py-4">Henüz kategori eklenmemiş.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Kategori</th>
+                                            <th class="text-center">Ürün</th>
+                                            <th class="text-end">Toplam Stok</th>
+                                            <th class="text-center">Kritik</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var k in Model.KategoriOzetleri)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <a asp-page="/Urunler/Index" asp-route-kategoriId="@k.Id" class="fw-semibold text-decoration-none">
+                                                        @k.Ad
+                                                    </a>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge rounded-pill text-bg-secondary">@k.UrunCesidi</span>
+                                                </td>
+                                                <td class="text-end fw-semibold">@k.ToplamStok</td>
+                                                <td class="text-center">
+                                                    @if (k.KritikUrunSayisi > 0)
+                                                    {
+                                                        <span class="badge text-bg-danger">@k.KritikUrunSayisi</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted small">-</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. KULLANICI VE YETKİ YÖNETİMİ (Mobil KullaniciEkleEkrani ile birebir uyumlu) -->
+        <section id="kullanici-yonetimi">
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h5 class="mb-0 fw-bold">Kayıtlı Kullanıcılar ve Roller</h5>
+                                <small class="text-muted">@Model.YoneticiSayisi yönetici, @Model.CalisanSayisi çalışan</small>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 table-responsive-cards">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ad Soyad</th>
+                                        <th>Rol</th>
+                                        <th class="text-end">Yetki Değiştir</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var k in Model.Kullanicilar)
+                                    {
+                                        <tr>
+                                            <td data-label="Kullanıcı">
+                                                <div class="fw-semibold">@k.AdSoyad</div>
+                                                <small class="text-muted">@k.Email</small>
+                                            </td>
+                                            <td data-label="Rol">
+                                                <span class="badge @(k.YoneticiMi ? "text-bg-primary" : "text-bg-secondary")">
+                                                    @k.Rol
+                                                </span>
+                                            </td>
+                                            <td data-label="Yetki Değiştir" class="text-end">
+                                                <form method="post" asp-page-handler="RolDegistir" class="d-inline">
+                                                    <input type="hidden" name="kullaniciId" value="@k.Id" />
+                                                    <input type="hidden" name="yeniRol" value="@(k.YoneticiMi ? "Calisan" : "Yonetici")" />
+                                                    <button type="submit" class="btn btn-sm @(k.YoneticiMi ? "btn-outline-secondary" : "btn-outline-primary")">
+                                                        @(k.YoneticiMi ? "Çalışan Yap" : "Yönetici Yap")
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-bold">Yeni Kullanıcı Ekle</h5>
+                            <small class="text-muted">Yönetici veya çalışan hesabı aç</small>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" asp-page-handler="KullaniciEkle">
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                                <div class="mb-2">
+                                    <label asp-for="YeniKullanici.AdSoyad" class="form-label small fw-semibold mb-1"></label>
+                                    <input asp-for="YeniKullanici.AdSoyad" class="form-control form-control-sm" placeholder="Örn: Ahmet Yılmaz" />
+                                    <span asp-validation-for="YeniKullanici.AdSoyad" class="text-danger small"></span>
+                                </div>
+                                <div class="mb-2">
+                                    <label asp-for="YeniKullanici.Email" class="form-label small fw-semibold mb-1"></label>
+                                    <input asp-for="YeniKullanici.Email" class="form-control form-control-sm" placeholder="ornek@stoktakip.com" />
+                                    <span asp-validation-for="YeniKullanici.Email" class="text-danger small"></span>
+                                </div>
+                                <div class="mb-2">
+                                    <label asp-for="YeniKullanici.Sifre" class="form-label small fw-semibold mb-1"></label>
+                                    <div class="input-group input-group-sm">
+                                        <input asp-for="YeniKullanici.Sifre" class="form-control" id="yeniKullaniciSifre" placeholder="En az 6 karakter" />
+                                        <button type="button" class="btn btn-outline-secondary" id="sifreGosterBtn">Göster</button>
+                                    </div>
+                                    <span asp-validation-for="YeniKullanici.Sifre" class="text-danger small"></span>
+                                </div>
+                                <div class="mb-2">
+                                    <label asp-for="YeniKullanici.SifreTekrar" class="form-label small fw-semibold mb-1"></label>
+                                    <input asp-for="YeniKullanici.SifreTekrar" class="form-control form-control-sm" id="yeniKullaniciSifreTekrar" placeholder="Şifreyi tekrar girin" />
+                                    <span asp-validation-for="YeniKullanici.SifreTekrar" class="text-danger small"></span>
+                                </div>
+                                <div class="form-check my-3">
+                                    <input asp-for="YeniKullanici.YoneticiYetkisi" class="form-check-input" id="yoneticiYetkisiCheck" />
+                                    <label asp-for="YeniKullanici.YoneticiYetkisi" class="form-check-label fw-semibold small"></label>
+                                    <div class="form-text small mt-0" id="yoneticiYetkisiAciklama">
+                                        İşaretlenmezse kullanıcı Çalışan olur.
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold py-2">
+                                    Kullanıcıyı Ekle
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const sifreInput = document.getElementById('yeniKullaniciSifre');
+            const sifreTekrarInput = document.getElementById('yeniKullaniciSifreTekrar');
+            const gosterBtn = document.getElementById('sifreGosterBtn');
+            const yoneticiCheck = document.getElementById('yoneticiYetkisiCheck');
+            const yoneticiAciklama = document.getElementById('yoneticiYetkisiAciklama');
+
+            if (gosterBtn && sifreInput && sifreTekrarInput) {
+                gosterBtn.addEventListener('click', function () {
+                    const gizli = sifreInput.type === 'password';
+                    sifreInput.type = gizli ? 'text' : 'password';
+                    sifreTekrarInput.type = gizli ? 'text' : 'password';
+                    gosterBtn.textContent = gizli ? 'Gizle' : 'Göster';
+                });
+            }
+
+            if (yoneticiCheck && yoneticiAciklama) {
+                const guncelle = () => {
+                    yoneticiAciklama.textContent = yoneticiCheck.checked
+                        ? 'Kullanıcı Yönetici olacak.'
+                        : 'İşaretlenmezse kullanıcı Çalışan olur.';
+                };
+                yoneticiCheck.addEventListener('change', guncelle);
+                guncelle();
+            }
+        })();
+    </script>
+}

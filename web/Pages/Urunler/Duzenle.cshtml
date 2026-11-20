@@ -5,28 +5,57 @@
 }
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a asp-page="Index">Ürünler</a></li>
+                <li class="breadcrumb-item"><a asp-page="Detay" asp-route-id="@Model.Urun.Id">@Model.Urun.Ad</a></li>
                 <li class="breadcrumb-item active">Düzenle</li>
             </ol>
         </nav>
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h3 class="card-title mb-4">Ürün Düzenle</h3>
-                <form method="post">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-3 p-md-4">
+                <h3 class="card-title h4 fw-bold mb-3">Ürün Düzenle</h3>
+                <form method="post" id="urunForm">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
                     <partial name="_UrunForm" for="Urun" />
-                    <div class="d-flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
-                        <a asp-page="Index" class="btn btn-outline-secondary">İptal</a>
+                    <div class="d-flex flex-column flex-sm-row gap-2 mt-4 pt-3 border-top">
+                        <button type="submit" class="btn btn-primary fw-semibold flex-grow-1 py-2">Değişiklikleri Kaydet</button>
+                        <a asp-page="Detay" asp-route-id="@Model.Urun.Id" class="btn btn-outline-secondary py-2">İptal</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Hızlı Kategori Ekle Modal -->
+<div class="modal fade" id="hizliKategoriModal" tabindex="-1" aria-labelledby="hizliKategoriModalBaslik" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="hizliKategoriModalBaslik">Yeni Kategori Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div id="hizliKategoriHata" class="alert alert-danger py-2 small d-none"></div>
+                <div class="mb-3">
+                    <label for="yeniKategoriAd" class="form-label fw-semibold">Kategori Adı <span class="text-danger">*</span></label>
+                    <input type="text" id="yeniKategoriAd" class="form-control" placeholder="Örn: Elektronik" />
+                </div>
+                <div class="mb-0">
+                    <label for="yeniKategoriAciklama" class="form-label fw-semibold">Açıklama</label>
+                    <input type="text" id="yeniKategoriAciklama" class="form-control" placeholder="İsteğe bağlı açıklama" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary fw-semibold" id="hizliKategoriKaydetBtn">Kategori Ekle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <partial name="_UrunFormScriptsPartial" />
 }
-

@@ -4,23 +4,27 @@
     ViewData["Title"] = "Depolar";
     var yonetici = User.IsInRole("Yonetici");
 }
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 sayfa-baslik-bar">
     <div>
         <h2 class="mb-0">Depolar</h2>
-        <small class="text-muted">Toplam @Model.Depolar.Count depo</small>
+        <small class="text-muted">
+            Toplam @Model.Depolar.Count depo · @Model.Depolar.Sum(d => d.ToplamUrunAdeti) adet zimmetli stok
+        </small>
     </div>
     @if (yonetici)
     {
-        <a asp-page="Ekle" class="btn btn-primary">+ Yeni Depo</a>
+        <div class="aksiyon-grup">
+            <a asp-page="Ekle" class="btn btn-primary">+ Yeni Depo</a>
+        </div>
     }
 </div>
 
 <form method="get" class="row g-2 mb-3">
-    <div class="col-sm-8 col-md-6">
+    <div class="col-12 col-sm-8 col-md-6">
         <input type="search" name="arama" value="@Model.Arama" class="form-control" placeholder="Depo adı veya konuma göre ara..." />
     </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Ara</button>
+    <div class="col-12 col-sm-auto d-flex gap-2">
+        <button type="submit" class="btn btn-outline-secondary flex-grow-1">Ara</button>
         @if (!string.IsNullOrEmpty(Model.Arama))
         {
             <a asp-page="Index" class="btn btn-link">Temizle</a>
@@ -36,38 +40,136 @@
 }
 else
 {
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 table-responsive-cards">
                 <thead class="table-light">
                     <tr>
                         <th>Depo Adı</th>
-                        <th>Konum</th>
-                        <th>Açıklama</th>
-                        <th class="text-center">Stok Hareketi</th>
-                        @if (yonetici) { <th class="text-end">İşlemler</th> }
+                        <th>Konum & Açıklama</th>
+                        <th class="text-center">Zimmetli Ürün</th>
+                        <th class="text-end">Toplam Adet</th>
+                        <th class="text-end">İşlemler</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var d in Model.Depolar)
                     {
                         <tr>
-                            <td class="fw-semibold">@d.Ad</td>
-                            <td>@(string.IsNullOrWhiteSpace(d.Konum) ? "-" : d.Konum)</td>
-                            <td class="text-muted">@(string.IsNullOrWhiteSpace(d.Aciklama) ? "-" : d.Aciklama)</td>
-                            <td class="text-center"><span class="badge rounded-pill text-bg-secondary">@d.HareketSayisi</span></td>
-                            @if (yonetici)
-                            {
-                                <td class="text-end text-nowrap">
+                            <td data-label="Depo Adı">
+                                <button type="button" class="btn btn-link p-0 fw-bold text-decoration-none text-start"
+                                        data-bs-toggle="modal" data-bs-target="#depoDetayModal-@d.Id">
+                                    @d.Ad
+                                </button>
+                                <div class="small text-muted">@d.HareketSayisi hareket kaydı</div>
+                            </td>
+                            <td data-label="Konum & Açıklama">
+                                <div>@(string.IsNullOrWhiteSpace(d.Konum) ? "-" : d.Konum)</div>
+                                @if (!string.IsNullOrWhiteSpace(d.Aciklama))
+                                {
+                                    <small class="text-muted">@d.Aciklama</small>
+                                }
+                            </td>
+                            <td data-label="Zimmetli Ürün" class="text-center">
+                                <button type="button" class="badge rounded-pill text-bg-primary border-0 px-3 py-2"
+                                        data-bs-toggle="modal" data-bs-target="#depoDetayModal-@d.Id">
+                                    @d.UrunCesidiSayisi çeşit ürün
+                                </button>
+                            </td>
+                            <td data-label="Toplam Adet" class="text-end">
+                                <span class="fs-5 fw-bold text-success">@d.ToplamUrunAdeti</span>
+                                <span class="small text-muted">adet</span>
+                            </td>
+                            <td data-label="İşlemler" class="text-end text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="modal" data-bs-target="#depoDetayModal-@d.Id">
+                                    Zimmetli Ürünler
+                                </button>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-depoId="@d.Id"
+                                   class="btn btn-sm btn-outline-success" title="Bu depoya stok girişi yap">+ Giriş</a>
+                                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-depoId="@d.Id"
+                                   class="btn btn-sm btn-outline-danger" title="Bu depodan stok çıkışı yap">- Çıkış</a>
+                                @if (yonetici)
+                                {
                                     <a asp-page="Duzenle" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary">Düzenle</a>
                                     <a asp-page="Sil" asp-route-id="@d.Id" class="btn btn-sm btn-outline-danger">Sil</a>
-                                </td>
-                            }
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
     </div>
-}
 
+    <!-- Depo Zimmetli Ürünler Detay Modalları (Mobil DepolarEkrani Alt Sayfası ile Birebir) -->
+    @foreach (var d in Model.Depolar)
+    {
+        <div class="modal fade" id="depoDetayModal-@d.Id" tabindex="-1" aria-labelledby="depoDetayBaslik-@d.Id" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="depoDetayBaslik-@d.Id">@d.Ad</h5>
+                            @if (!string.IsNullOrWhiteSpace(d.Konum))
+                            {
+                                <small class="text-muted">@d.Konum</small>
+                            }
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (!string.IsNullOrWhiteSpace(d.Aciklama))
+                        {
+                            <p class="text-muted small mb-3">@d.Aciklama</p>
+                        }
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0">
+                                Depodaki Zimmetli Ürünler (@d.UrunCesidiSayisi çeşit · @d.ToplamUrunAdeti adet)
+                            </h6>
+                            <a asp-page="/StokHareketleri/Index" asp-route-depoId="@d.Id" class="small text-decoration-none">
+                                Hareket Geçmişi →
+                            </a>
+                        </div>
+                        @if (d.Urunler.Count == 0)
+                        {
+                            <div class="alert alert-light border small mb-0">
+                                Bu depoda henüz zimmetli ürün stoğu yok.
+                            </div>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var u in d.Urunler)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                                        <div>
+                                            <a asp-page="/Urunler/Detay" asp-route-id="@u.UrunId" class="fw-bold text-dark text-decoration-none">
+                                                @u.UrunAdi
+                                            </a>
+                                            <div class="small text-muted">Kod: <code>@u.UrunKodu</code></div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge rounded-pill text-bg-success px-3 py-2">@u.Miktar adet</span>
+                                            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@u.UrunId" asp-route-depoId="@d.Id"
+                                               class="btn btn-sm btn-outline-success" title="Stok Girişi">+</a>
+                                            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-urunId="@u.UrunId" asp-route-depoId="@d.Id"
+                                               class="btn btn-sm btn-outline-danger" title="Stok Çıkışı">-</a>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <div class="d-flex gap-2">
+                            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-depoId="@d.Id" class="btn btn-sm btn-success">+ Stok Girişi</a>
+                            <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" asp-route-depoId="@d.Id" class="btn btn-sm btn-danger">- Stok Çıkışı</a>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

@@ -2,53 +2,202 @@
 @model StokTakip.Pages.StokHareketleri.IndexModel
 @{
     ViewData["Title"] = "Stok Hareketleri";
+    var filtreVar = !string.IsNullOrEmpty(Model.Arama) || Model.UrunId.HasValue || Model.DepoId.HasValue || !string.IsNullOrEmpty(Model.Tur);
 }
-<h2>Stok Hareketleri</h2>
-@if (TempData["Mesaj"] != null)
-{
-    <div class="alert alert-success">@TempData["Mesaj"]</div>
-}
-@if (TempData["Uyari"] != null)
-{
-    <div class="alert alert-warning">@TempData["Uyari"]</div>
-}
-<div class="mb-3">
-    <a class="btn btn-success" href="/StokHareketleri/Ekle?tur=Giris">+ Stok Girişi</a>
-    <a class="btn btn-danger" href="/StokHareketleri/Ekle?tur=Cikis">- Stok Çıkışı</a>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 sayfa-baslik-bar">
+    <div>
+        <h2 class="mb-0">Stok Hareketleri</h2>
+        <small class="text-muted">
+            Depolara yapılan tüm stok giriş ve çıkış kayıtları (@Model.ToplamHareketSayisi kayıt)
+        </small>
+    </div>
+    <div class="aksiyon-grup d-flex gap-2">
+        <a class="btn btn-success fw-semibold" asp-page="Ekle" asp-route-tur="Giris" asp-route-urunId="@Model.UrunId" asp-route-depoId="@Model.DepoId">
+            + Stok Girişi
+        </a>
+        <a class="btn btn-danger fw-semibold" asp-page="Ekle" asp-route-tur="Cikis" asp-route-urunId="@Model.UrunId" asp-route-depoId="@Model.DepoId">
+            - Stok Çıkışı
+        </a>
+    </div>
 </div>
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Tarih</th>
-                <th>Ürün</th>
-                <th>Depo</th>
-                <th>Tür</th>
-                <th>Miktar</th>
-                <th>İşlemi Yapan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var h in Model.Hareketler)
+
+<!-- Özet Kartları -->
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+            <div class="card-body py-2 px-3">
+                <div class="text-muted small text-uppercase fw-semibold">Listelenen Hareket</div>
+                <div class="fs-3 fw-bold text-primary">@Model.ToplamHareketSayisi</div>
+                <small class="text-muted">@Model.GirisIslemSayisi giriş · @Model.CikisIslemSayisi çıkış</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+            <div class="card-body py-2 px-3">
+                <div class="text-muted small text-uppercase fw-semibold">Toplam Giriş Adedi</div>
+                <div class="fs-3 fw-bold text-success">+@Model.ToplamGirisAdedi</div>
+                <small class="text-muted">@Model.GirisIslemSayisi giriş işleminde</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
+            <div class="card-body py-2 px-3">
+                <div class="text-muted small text-uppercase fw-semibold">Toplam Çıkış Adedi</div>
+                <div class="fs-3 fw-bold text-danger">-@Model.ToplamCikisAdedi</div>
+                <small class="text-muted">@Model.CikisIslemSayisi çıkış işleminde</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        @{
+            var netDegisim = Model.ToplamGirisAdedi - Model.ToplamCikisAdedi;
+        }
+        <div class="card shadow-sm border-0 border-start @(netDegisim >= 0 ? "border-info" : "border-warning") border-4 h-100">
+            <div class="card-body py-2 px-3">
+                <div class="text-muted small text-uppercase fw-semibold">Net Stok Değişimi</div>
+                <div class="fs-3 fw-bold @(netDegisim >= 0 ? "text-info" : "text-warning")">
+                    @(netDegisim >= 0 ? "+" : "")@netDegisim
+                </div>
+                <small class="text-muted">Giriş ve çıkış farkı</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtreleme Formu -->
+<form method="get" class="card card-body shadow-sm border-0 mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-12 col-md-4">
+            <input type="search" name="arama" value="@Model.Arama" class="form-control" placeholder="Ürün, kod, depo veya personel ara..." />
+        </div>
+        <div class="col-6 col-md-3">
+            <select name="urunId" asp-items="Model.UrunListesi" class="form-select">
+                <option value="">Tüm ürünler</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <select name="depoId" asp-items="Model.DepoListesi" class="form-select">
+                <option value="">Tüm depolar</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <select name="tur" class="form-select">
+                <option value="">Tüm türler</option>
+                <option value="Giris" selected="@(Model.Tur == "Giris")">Sadece Giriş (+)</option>
+                <option value="Cikis" selected="@(Model.Tur == "Cikis")">Sadece Çıkış (-)</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-outline-secondary flex-grow-1">Filtrele</button>
+            @if (filtreVar)
             {
-                <tr>
-                    <td>@h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>@h.Urun?.Ad</td>
-                    <td>@h.Depo?.Ad</td>
-                    <td>
-                        @if (h.HareketTuru == "Giris")
-                        {
-                            <span class="badge bg-success">Giriş</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-danger">Çıkış</span>
-                        }
-                    </td>
-                    <td>@h.Miktar</td>
-                    <td>@h.Kullanici?.AdSoyad</td>
-                </tr>
+                <a asp-page="Index" class="btn btn-link px-2 text-decoration-none" title="Filtreleri temizle">✕</a>
             }
-        </tbody>
-    </table>
-</div>
+        </div>
+    </div>
+</form>
+
+@if (Model.Hareketler.Count == 0)
+{
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center py-5">
+            <h5 class="fw-semibold mb-1">
+                @(filtreVar ? "Filtrelerle eşleşen stok hareketi bulunamadı." : "Henüz stok hareketi kaydedilmemiş.")
+            </h5>
+            <p class="text-muted small mb-3">
+                Depolara ürün girişi veya çıkışı yapmak için aşağıdaki butonları kullanabilirsiniz.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <a class="btn btn-sm btn-success" asp-page="Ekle" asp-route-tur="Giris">+ Stok Girişi Yap</a>
+                <a class="btn btn-sm btn-danger" asp-page="Ekle" asp-route-tur="Cikis">- Stok Çıkışı Yap</a>
+                @if (filtreVar)
+                {
+                    <a class="btn btn-sm btn-outline-secondary" asp-page="Index">Filtreleri Temizle</a>
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-responsive-cards">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Ürün</th>
+                        <th>Depo</th>
+                        <th class="text-center">Tür</th>
+                        <th class="text-end">Miktar</th>
+                        <th>İşlemi Yapan</th>
+                        <th class="text-end">Hızlı İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var h in Model.Hareketler)
+                    {
+                        var giris = h.HareketTuru == "Giris";
+                        var kullaniciAd = !string.IsNullOrWhiteSpace(h.Kullanici?.AdSoyad)
+                            ? h.Kullanici.AdSoyad
+                            : (h.Kullanici?.Email ?? "-");
+                        <tr>
+                            <td data-label="Tarih" class="text-nowrap small text-muted">
+                                @h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                            </td>
+                            <td data-label="Ürün">
+                                <div>
+                                    @if (h.Urun != null)
+                                    {
+                                        <code class="me-1">@h.Urun.UrunKodu</code>
+                                        <span class="fw-semibold">@h.Urun.Ad</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </div>
+                                @if (h.Urun?.Kategori != null)
+                                {
+                                    <small class="text-muted">@h.Urun.Kategori.Ad · Güncel Stok: @h.Urun.MevcutMiktar</small>
+                                }
+                            </td>
+                            <td data-label="Depo">
+                                <span class="fw-medium">@(h.Depo?.Ad ?? "-")</span>
+                                @if (!string.IsNullOrWhiteSpace(h.Depo?.Konum))
+                                {
+                                    <div class="small text-muted">@h.Depo.Konum</div>
+                                }
+                            </td>
+                            <td data-label="Tür" class="text-center">
+                                @if (giris)
+                                {
+                                    <span class="badge text-bg-success">+ Giriş</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-danger">- Çıkış</span>
+                                }
+                            </td>
+                            <td data-label="Miktar" class="text-end fw-bold @(giris ? "text-success" : "text-danger")">
+                                @(giris ? "+" : "-")@h.Miktar
+                            </td>
+                            <td data-label="İşlemi Yapan" class="small">
+                                @kullaniciAd
+                            </td>
+                            <td data-label="Hızlı İşlem" class="text-end text-nowrap">
+                                <a asp-page="Ekle" asp-route-tur="Giris" asp-route-urunId="@h.UrunId" asp-route-depoId="@h.DepoId"
+                                   class="btn btn-sm btn-outline-success" title="Bu ürün ve depo için stok girişi yap">+ Giriş</a>
+                                <a asp-page="Ekle" asp-route-tur="Cikis" asp-route-urunId="@h.UrunId" asp-route-depoId="@h.DepoId"
+                                   class="btn btn-sm btn-outline-danger" title="Bu ürün ve depo için stok çıkışı yap">- Çıkış</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

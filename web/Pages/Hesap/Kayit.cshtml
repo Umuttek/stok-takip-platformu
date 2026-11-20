@@ -3,34 +3,39 @@
 @{
     ViewData["Title"] = "Kayıt Ol";
 }
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <h2 class="mb-3">Kayıt Ol</h2>
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="mb-3">
-                <label asp-for="Girdi.AdSoyad" class="form-label"></label>
-                <input asp-for="Girdi.AdSoyad" class="form-control" />
-                <span asp-validation-for="Girdi.AdSoyad" class="text-danger"></span>
+<div class="row justify-content-center py-3">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-3 p-md-4">
+                <h2 class="h4 fw-bold mb-1">Kayıt Ol</h2>
+                <p class="text-muted small mb-4">Yeni bir çalışan hesabı oluşturun.</p>
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="mb-3">
+                        <label asp-for="Girdi.AdSoyad" class="form-label fw-semibold"></label>
+                        <input asp-for="Girdi.AdSoyad" class="form-control" placeholder="Adınız Soyadınız" />
+                        <span asp-validation-for="Girdi.AdSoyad" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Girdi.Email" class="form-label fw-semibold"></label>
+                        <input asp-for="Girdi.Email" class="form-control" placeholder="ornek@stoktakip.com" />
+                        <span asp-validation-for="Girdi.Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Girdi.Sifre" class="form-label fw-semibold"></label>
+                        <input asp-for="Girdi.Sifre" class="form-control" />
+                        <span asp-validation-for="Girdi.Sifre" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Girdi.SifreTekrar" class="form-label fw-semibold"></label>
+                        <input asp-for="Girdi.SifreTekrar" class="form-control" />
+                        <span asp-validation-for="Girdi.SifreTekrar" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-semibold py-2">Kayıt Ol</button>
+                </form>
+                <p class="mt-3 mb-0 text-center small">Zaten hesabın var mı? <a asp-page="/Hesap/Giris">Giriş yap</a></p>
             </div>
-            <div class="mb-3">
-                <label asp-for="Girdi.Email" class="form-label"></label>
-                <input asp-for="Girdi.Email" class="form-control" />
-                <span asp-validation-for="Girdi.Email" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Girdi.Sifre" class="form-label"></label>
-                <input asp-for="Girdi.Sifre" class="form-control" />
-                <span asp-validation-for="Girdi.Sifre" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Girdi.SifreTekrar" class="form-label"></label>
-                <input asp-for="Girdi.SifreTekrar" class="form-control" />
-                <span asp-validation-for="Girdi.SifreTekrar" class="text-danger"></span>
-            </div>
-            <button type="submit" class="btn btn-success w-100">Kayıt Ol</button>
-        </form>
-        <p class="mt-3">Zaten hesabın var mı? <a asp-page="/Hesap/Giris">Giriş yap</a></p>
+        </div>
     </div>
 </div>
 @section Scripts {

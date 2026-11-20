@@ -2,24 +2,34 @@
 @using StokTakip.Models
 @inject SignInManager<Kullanici> SignInManager
 @inject UserManager<Kullanici> UserManager
-<ul class="navbar-nav">
+<ul class="navbar-nav align-items-lg-center gap-2 pt-2 pt-lg-0 border-top border-lg-0 mt-2 mt-lg-0">
     @if (SignInManager.IsSignedIn(User))
     {
         var kullanici = await UserManager.GetUserAsync(User);
         var gorunenAd = !string.IsNullOrWhiteSpace(kullanici?.AdSoyad) ? kullanici.AdSoyad : User.Identity?.Name;
-        <li class="nav-item">
-            <span class="nav-link text-dark">Merhaba, @gorunenAd</span>
+        var yoneticiMi = User.IsInRole("Yonetici");
+        <li class="nav-item d-flex align-items-center gap-2">
+            <span class="badge @(yoneticiMi ? "text-bg-primary" : "text-bg-secondary")">
+                @(yoneticiMi ? "Yönetici" : "Çalışan")
+            </span>
+            <span class="text-dark small fw-semibold text-truncate" style="max-width: 180px;" title="@gorunenAd">
+                @gorunenAd
+            </span>
         </li>
         <li class="nav-item">
-            <form method="post" action="/Hesap/Cikis">
+            <form method="post" action="/Hesap/Cikis" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="nav-link btn btn-link text-dark">Çıkış</button>
+                <button type="submit" class="btn btn-sm btn-outline-secondary w-100 w-lg-auto">Çıkış Yap</button>
             </form>
         </li>
     }
     else
     {
-        <li class="nav-item"><a class="nav-link text-dark" asp-page="/Hesap/Giris">Giriş</a></li>
-        <li class="nav-item"><a class="nav-link text-dark" asp-page="/Hesap/Kayit">Kayıt Ol</a></li>
+        <li class="nav-item">
+            <a class="btn btn-sm btn-outline-primary w-100 w-lg-auto" asp-page="/Hesap/Giris">Giriş Yap</a>
+        </li>
+        <li class="nav-item">
+            <a class="btn btn-sm btn-primary w-100 w-lg-auto" asp-page="/Hesap/Kayit">Kayıt Ol</a>
+        </li>
     }
 </ul>

@@ -6,8 +6,8 @@
     var yonetici = User.IsInRole("Yonetici");
 }
 
-<div class="p-4 mb-4 rounded-3 bg-primary bg-gradient text-white shadow-sm">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+<div class="p-3 p-md-4 mb-4 rounded-3 bg-primary bg-gradient text-white shadow-sm">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
             <h1 class="h3 fw-bold mb-1">
                 @if (girisYapildi)
@@ -25,9 +25,20 @@
         </div>
         @if (girisYapildi)
         {
-            <span class="badge bg-light text-primary fs-6 px-3 py-2">
-                @(yonetici ? "Yönetici" : "Çalışan")
-            </span>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="btn btn-sm btn-light text-success fw-semibold">
+                    + Stok Girişi
+                </a>
+                <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="btn btn-sm btn-light text-danger fw-semibold">
+                    - Stok Çıkışı
+                </a>
+                @if (yonetici)
+                {
+                    <a asp-page="/Yonetim/Index" class="btn btn-sm btn-outline-light fw-semibold">
+                        Yönetim Paneli →
+                    </a>
+                }
+            </div>
         }
         else
         {
@@ -40,7 +51,7 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 border-0 border-start border-primary border-4">
             <div class="card-body">
                 <div class="text-muted small text-uppercase fw-semibold">Toplam Ürün Çeşidi</div>
@@ -49,7 +60,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 border-0 border-start border-success border-4">
             <div class="card-body">
                 <div class="text-muted small text-uppercase fw-semibold">Tüm Ürünlerin Toplam Adeti</div>
@@ -58,7 +69,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 border-0 border-start border-info border-4">
             <div class="card-body">
                 <div class="text-muted small text-uppercase fw-semibold">Depo Sayısı</div>
@@ -67,7 +78,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card shadow-sm h-100 border-0 border-start @(Model.KritikStokUrunSayisi > 0 ? "border-danger" : "border-secondary") border-4">
             <div class="card-body">
                 <div class="text-muted small text-uppercase fw-semibold">Kritik Stoğa Sahip Ürün</div>
@@ -92,14 +103,14 @@
 @if (girisYapildi)
 {
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <h5 class="card-title">Ürün Yönetimi</h5>
+                        <h5 class="card-title fw-bold">Ürün Yönetimi</h5>
                         <p class="card-text text-muted small">Ürünleri listele, ara, stok ve kritik stok seviyelerini takip et.</p>
                     </div>
-                    <div class="d-flex gap-2 mt-2">
+                    <div class="d-flex flex-wrap gap-2 mt-2">
                         <a asp-page="/Urunler/Index" class="btn btn-sm btn-outline-primary">Ürünleri Gör</a>
                         @if (yonetici)
                         {
@@ -109,14 +120,29 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <h5 class="card-title">Kategori Yönetimi</h5>
-                        <p class="card-text text-muted small">Ürün kategorilerini görüntüle ve düzenle.</p>
+                        <h5 class="card-title fw-bold">Stok Hareketleri</h5>
+                        <p class="card-text text-muted small">Depolara ürün girişi ve çıkışı yap, hareket geçmişini incele.</p>
                     </div>
-                    <div class="d-flex gap-2 mt-2">
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a asp-page="/StokHareketleri/Index" class="btn btn-sm btn-outline-primary">Geçmiş</a>
+                        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" class="btn btn-sm btn-success">+ Giriş</a>
+                        <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Cikis" class="btn btn-sm btn-danger">- Çıkış</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title fw-bold">Kategori Yönetimi</h5>
+                        <p class="card-text text-muted small">Ürün kategorilerini görüntüle ve kategori bazlı filtrele.</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
                         <a asp-page="/Kategoriler/Index" class="btn btn-sm btn-outline-primary">Kategorileri Gör</a>
                         @if (yonetici)
                         {
@@ -126,14 +152,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <h5 class="card-title">Depo Yönetimi</h5>
-                        <p class="card-text text-muted small">Depoları, konumlarını ve açıklamalarını yönet.</p>
+                        <h5 class="card-title fw-bold">Depo Yönetimi</h5>
+                        <p class="card-text text-muted small">Depoları, konumlarını ve depolardaki hareket sayılarını takip et.</p>
                     </div>
-                    <div class="d-flex gap-2 mt-2">
+                    <div class="d-flex flex-wrap gap-2 mt-2">
                         <a asp-page="/Depolar/Index" class="btn btn-sm btn-outline-primary">Depoları Gör</a>
                         @if (yonetici)
                         {
@@ -148,12 +174,12 @@
     @if (Model.KritikUrunler.Count > 0)
     {
         <div class="card shadow-sm border-danger-subtle">
-            <div class="card-header bg-danger-subtle text-danger-emphasis d-flex justify-content-between align-items-center">
+            <div class="card-header bg-danger-subtle text-danger-emphasis d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span class="fw-semibold">Kritik Stok Uyarısı</span>
                 <a asp-page="/Urunler/Index" asp-route-sadeceKritik="true" class="btn btn-sm btn-outline-danger">Tümünü Gör</a>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 table-responsive-cards">
                     <thead class="table-light">
                         <tr>
                             <th>Kod</th>
@@ -161,17 +187,22 @@
                             <th>Kategori</th>
                             <th class="text-end">Mevcut</th>
                             <th class="text-end">Kritik Seviye</th>
+                            <th class="text-end">İşlem</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var u in Model.KritikUrunler)
                         {
                             <tr>
-                                <td><code>@u.UrunKodu</code></td>
-                                <td class="fw-semibold">@u.Ad</td>
-                                <td>@u.Kategori?.Ad</td>
-                                <td class="text-end text-danger fw-bold">@u.MevcutMiktar</td>
-                                <td class="text-end text-muted">@u.KritikStokSeviyesi</td>
+                                <td data-label="Kod"><code>@u.UrunKodu</code></td>
+                                <td data-label="Ürün Adı" class="fw-semibold">@u.Ad</td>
+                                <td data-label="Kategori">@u.Kategori?.Ad</td>
+                                <td data-label="Mevcut" class="text-end text-danger fw-bold">@u.MevcutMiktar</td>
+                                <td data-label="Kritik Seviye" class="text-end text-muted">@u.KritikStokSeviyesi</td>
+                                <td data-label="İşlem" class="text-end">
+                                    <a asp-page="/StokHareketleri/Ekle" asp-route-tur="Giris" asp-route-urunId="@u.Id"
+                                       class="btn btn-sm btn-success">+ Stok Girişi</a>
+                                </td>
                             </tr>
                         }
                     </tbody>
